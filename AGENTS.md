@@ -20,9 +20,14 @@ Enunciado completo: [project/briefing.md](project/briefing.md).
 |---|---|
 | Lenguaje | TypeScript (modo `strict`) |
 | UI | React + Vite |
-| Tests unitarios y de componentes | Vitest + Testing Library |
-| Tests end-to-end | Playwright |
-| Backend | **Pendiente de decidir en el ADD**: API del curso o API simulada |
+| Enrutado | React Router (modo declarativo) |
+| Validación de respuestas de la API | Zod |
+| Estilos | CSS plano / CSS Modules (sin librería de UI) |
+| Tests unitarios y de componentes | Vitest + Testing Library (jsdom) |
+| Tests end-to-end | Playwright (API interceptada con `page.route`; proyecto `smoke` opcional contra la API real) |
+| Backend | API del curso **activity-bookings-express** (fork local en `http://localhost:3000`, configurable con `VITE_API_URL`) |
+
+Diseño detallado y decisiones: [project/ADD.md](project/ADD.md).
 
 No añadas dependencias que no estén justificadas en `project/ADD.md`.
 
