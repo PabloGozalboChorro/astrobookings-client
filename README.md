@@ -1,39 +1,31 @@
-# Programación Inteligente
-Documentación para el curso de programación inteligente
+# AstroBookings Client
 
-Domina las nuevas primitivas de programación con IA para desarrollos más productivos y de calidad; 
-Pasa del Vibe Coding a la Spec-Driven Development.
+Aplicación cliente para la API de **AstroBookings**: consulta de lanzamientos espaciales y reserva de plazas.
 
----
+Es el ejercicio práctico del curso **Programación Inteligente: domina el desarrollo asistido con IA** (Alberto Basalo) y se desarrolla con *Spec-Driven Development* usando agentes con roles.
 
-## Sample project : Astro-Bookings
-API mínima en TypeScript y Express .
+- Enunciado: [project/briefing.md](project/briefing.md)
+- Reglas para agentes: [AGENTS.md](AGENTS.md)
+- Proyecto de ejemplo del curso: [activity-bookings-express](https://github.com/Programacion-Inteligente/activity-bookings-express)
 
-- **Ejemplo de proyecto**: [Astro-Bookings-Demo](https://github.com/Programacion-Inteligente/activity-bookings-express)
+## Cómo se trabaja
 
----
+| Paso | Comando (Claude Code) | Resultado |
+|---|---|---|
+| 1. Definir el producto | `/architect` | `project/PRD.md`, `project/ADD.md`, `project/specs/*.spec.md` |
+| 2. Construir una funcionalidad | `/builder <spec>` | plan, código, tests, limpieza y release |
+| 3. Mejorar el sistema | `/craftsman` | refactorización de código, agentes y skills |
 
-## Exercise project : Astro-Bookings-Client
-Aplicación cliente para interactuar con la API de Astro-Bookings.
-En cualquier lenguaje/framework de elección (e.g., React, Vue, Angular, o una CLI en Python/Node.js). 
-Incluso una aplicación de consola o web en Java o C#.
+Cada fase se detiene para que la persona la valide antes de continuar (*human-in-the-loop*).
 
-- [Exercise project : Astro-Bookings-Client](./astrobookings-cli.briefing.md)
+## Mantenimiento de los artefactos de IA
 
-Por supuesto, puedes desarrollarlo con cualquier herramienta de IA que te guste.
-- VSCode + GitHub Copilot
-- Cursor
-- ClaudeCode
-- Antigravity
-- etc.
+La fuente está en `.agents/`. Después de modificarla, regenera la copia para Claude Code:
 
----
+```powershell
+./scripts/sync-claude.ps1
+```
 
-- **Author**: [Alberto Basalo](https://albertobasalo.dev)
-- **Ai Code Academy en Español**: [AI code Academy](https://aicode.academy)
-- **Socials**:
-  - [X](https://x.com/albertobasalo)
-  - [LinkedIn](https://www.linkedin.com/in/albertobasalo/)
-  - [GitHub](https://github.com/albertobasalo)
+## Créditos
 
-
+- Curso: [Alberto Basalo](https://albertobasalo.dev) · [AI Code Academy](https://aicode.academy)
