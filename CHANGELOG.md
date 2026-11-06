@@ -12,3 +12,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Esqueleto de la aplicación con React, TypeScript (`strict`) y Vite: rutas base (`/` → `/lanzamientos`), página de "no encontrado" y configuración de la URL de la API con `VITE_API_URL`.
 - Herramientas de calidad: ESLint, Vitest con Testing Library y Playwright (Chromium y Firefox), con los scripts `typecheck`, `lint`, `test`, `test:e2e` y `test:e2e:smoke`.
 - Datos de prueba en el fork de la API (`activity-bookings-express`): 9 lanzamientos espaciales que cubren todos los estados, fechas pasadas, un nombre sin cohete y el caso de pago rechazado.
+
+### Fixed
+
+- API (fork `activity-bookings-express`): el login funciona con usuarios existentes y recién registrados, el registro ya no sobrescribe usuarios y, tras reiniciar, las reservas y los pagos nuevos no reutilizan ids.
