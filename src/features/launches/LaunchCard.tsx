@@ -1,17 +1,20 @@
 import { useId } from 'react';
 import { Link } from 'react-router';
-import { formatDateTime, formatDuration, formatPrice } from '../../domain/format';
-import { launchStatusLabel, type Launch } from '../../domain/launch';
+import {
+  formatDateTime,
+  formatDuration,
+  formatPrice,
+  formatTotalSeats,
+} from '../../domain/format';
+import { launchStatusLabel, type Bookability, type Launch } from '../../domain/launch';
+import { BookabilityNotice } from './BookabilityNotice';
 
 type LaunchCardProps = {
   launch: Launch;
+  bookability: Bookability;
 };
 
-function seatsText(totalSeats: number): string {
-  return totalSeats === 1 ? '1 plaza en total' : `${totalSeats} plazas en total`;
-}
-
-export function LaunchCard({ launch }: LaunchCardProps) {
+export function LaunchCard({ launch, bookability }: LaunchCardProps) {
   const titleId = useId();
 
   return (
@@ -26,8 +29,9 @@ export function LaunchCard({ launch }: LaunchCardProps) {
       </p>
       <p>{formatDuration(launch.durationMinutes)}</p>
       <p>{formatPrice(launch.pricePerSeat)} por plaza</p>
-      <p>{seatsText(launch.totalSeats)}</p>
+      <p>{formatTotalSeats(launch.totalSeats)}</p>
       <p className="launch-card__status">{launchStatusLabel(launch.status)}</p>
+      {!bookability.bookable && <BookabilityNotice reason={bookability.reason} />}
     </article>
   );
 }

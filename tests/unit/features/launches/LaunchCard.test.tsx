@@ -1,14 +1,17 @@
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import type { LaunchStatus } from '../../../../src/domain/launch';
+import type { Bookability, LaunchStatus } from '../../../../src/domain/launch';
 import { LaunchCard } from '../../../../src/features/launches/LaunchCard';
 import { launchFromDto, type ActivityDtoFixture } from '../../support/activities';
 
-function renderCard(overrides: Partial<ActivityDtoFixture> = {}) {
+function renderCard(
+  overrides: Partial<ActivityDtoFixture> = {},
+  bookability: Bookability = { bookable: true },
+) {
   render(
     <MemoryRouter>
-      <LaunchCard launch={launchFromDto(overrides)} />
+      <LaunchCard launch={launchFromDto(overrides)} bookability={bookability} />
     </MemoryRouter>,
   );
 }
@@ -106,6 +109,20 @@ describe('LaunchCard', () => {
     renderCard({ price });
 
     expect(screen.getByRole('article')).toHaveTextContent(expected);
+  });
+
+  it('R8: shows the reason on a non bookable card', () => {
+    renderCard({ status: 'sold-out' }, { bookable: false, reason: 'sold-out' });
+
+    const card = screen.getByRole('article');
+    expect(card).toHaveTextContent('Agotado: no quedan plazas');
+    expect(card.querySelector('.launch-card__status')).toHaveTextContent('Agotado');
+  });
+
+  it('R8: shows no reason on a bookable card', () => {
+    renderCard();
+
+    expect(screen.getByRole('article').querySelector('.bookability-notice')).toBeNull();
   });
 
   it('R3: splits only on the first separator in the card', () => {

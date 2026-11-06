@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getActivities } from '../../../src/api/activities';
-import { ContractError } from '../../../src/api/errors';
+import { getActivities, getActivity } from '../../../src/api/activities';
+import { ApiError, ContractError, isNotFoundError } from '../../../src/api/errors';
 import { activityDtoSchema } from '../../../src/api/schemas';
 import { activityDto, draftActivityDto } from '../support/activities';
 import { captureError, jsonResponse, mockFetch, sentRequest } from '../support/http';
@@ -36,6 +36,55 @@ describe('getActivities', () => {
     mockFetch(jsonResponse(200, [{ id: 1 }]));
 
     const error = await captureError(getActivities());
+
+    expect(error).toBeInstanceOf(ContractError);
+  });
+});
+
+describe('getActivity', () => {
+  it('R1: getActivity requests GET /activities/:id without Authorization and parses the launch', async () => {
+    const fetchSpy = mockFetch(jsonResponse(200, activityDto()));
+
+    const activity = await getActivity('activity-1');
+
+    const { url, init } = sentRequest(fetchSpy);
+    expect(url).toBe('http://localhost:3999/activities/activity-1');
+    expect(init.method).toBe('GET');
+    expect(new Headers(init.headers).has('Authorization')).toBe(false);
+    expect(activity.id).toBe('activity-1');
+    expect(activity.name).toBe('Falcon 9 · Misión Luna');
+  });
+
+  it('R1: getActivity encodes the id in the path', async () => {
+    const fetchSpy = mockFetch(jsonResponse(200, activityDto()));
+
+    await getActivity('xyz/1');
+
+    expect(sentRequest(fetchSpy).url).toBe('http://localhost:3999/activities/xyz%2F1');
+  });
+
+  it('R1: getActivity forwards the abort signal', async () => {
+    const fetchSpy = mockFetch(jsonResponse(200, activityDto()));
+    const controller = new AbortController();
+
+    await getActivity('activity-1', controller.signal);
+
+    expect(sentRequest(fetchSpy).init.signal).toBe(controller.signal);
+  });
+
+  it('R3: getActivity throws a not-found ApiError on 404 Activity not found', async () => {
+    mockFetch(jsonResponse(404, { message: 'Activity not found', errors: [] }));
+
+    const error = await captureError(getActivity('activity-99'));
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(isNotFoundError(error)).toBe(true);
+  });
+
+  it('R5: getActivity throws ContractError for { "id": 1 }', async () => {
+    mockFetch(jsonResponse(200, { id: 1 }));
+
+    const error = await captureError(getActivity('activity-1'));
 
     expect(error).toBeInstanceOf(ContractError);
   });

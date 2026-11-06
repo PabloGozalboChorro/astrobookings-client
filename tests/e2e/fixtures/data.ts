@@ -151,7 +151,7 @@ export const launchDtos: readonly ActivityDtoFixture[] = [
 
 export const DRAFT_LAUNCH_ID = 'activity-7';
 
-function findLaunchDto(id: string): ActivityDtoFixture {
+export function findLaunchDto(id: string): ActivityDtoFixture {
   const launch = launchDtos.find((dto) => dto.id === id);
   if (launch === undefined) {
     throw new Error(`Unknown launch fixture: ${id}`);
@@ -165,4 +165,6 @@ export const visibleLaunchDtos = launchDtos.filter((dto) => dto.id !== DRAFT_LAU
 
 export const errorResponses = {
   failedToRetrieveActivities: { message: 'Failed to retrieve activities', errors: [] },
+  failedToRetrieveActivity: { message: 'Failed to retrieve activity', errors: [] },
+  activityNotFound: { message: 'Activity not found', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;

@@ -48,6 +48,100 @@ export const draftActivityDto = activityDto({
   status: 'draft',
 });
 
+// Seed of activity-bookings-express (db/seed/activities.json) in API order.
+export const seedActivityDtos: readonly ActivityDtoFixture[] = [
+  activityDto(),
+  activityDto({
+    id: 'activity-2',
+    name: 'Starship · Órbita Marciana',
+    slug: 'starship-orbita-marciana',
+    price: 1249999,
+    date: '2027-06-01T09:00:00.000Z',
+    duration: 259200,
+    location: 'Starbase, Texas (EE. UU.)',
+    minParticipants: 4,
+    maxParticipants: 12,
+    status: 'confirmed',
+  }),
+  activityDto({
+    id: 'activity-3',
+    name: 'New Shepard · Vuelo Suborbital',
+    slug: 'new-shepard-vuelo-suborbital',
+    price: 12500,
+    date: '2027-02-10T16:00:00.000Z',
+    duration: 11,
+    location: 'Launch Site One, Texas (EE. UU.)',
+    minParticipants: 1,
+    maxParticipants: 6,
+  }),
+  activityDto({
+    id: 'activity-4',
+    name: 'Soyuz · Estación Orbital',
+    slug: 'soyuz-estacion-orbital',
+    price: 389999,
+    date: '2027-04-20T08:15:00.000Z',
+    duration: 14400,
+    location: 'Cosmódromo de Baikonur (Kazajistán)',
+    minParticipants: 2,
+    maxParticipants: 3,
+    status: 'sold-out',
+  }),
+  activityDto({
+    id: 'activity-5',
+    name: 'Ariane 6 · Mirador Orbital',
+    slug: 'ariane-6-mirador-orbital',
+    price: 179999,
+    date: '2027-09-12T21:45:00.000Z',
+    duration: 1440,
+    location: 'Puerto espacial de Kourou (Guayana Francesa)',
+    minParticipants: 2,
+    maxParticipants: 8,
+    status: 'cancelled',
+  }),
+  activityDto({
+    id: 'activity-6',
+    name: 'Electron · Amanecer Orbital',
+    slug: 'electron-amanecer-orbital',
+    price: 89999,
+    date: '2026-09-30T06:00:00.000Z',
+    duration: 180,
+    location: 'Península de Mahia (Nueva Zelanda)',
+    minParticipants: 1,
+    maxParticipants: 4,
+    status: 'done',
+  }),
+  draftActivityDto,
+  activityDto({
+    id: 'activity-8',
+    name: 'Paseo Lunar Express',
+    slug: 'paseo-lunar-express',
+    price: 499999,
+    date: '2027-12-24T20:00:00.000Z',
+    duration: 8640,
+    minParticipants: 2,
+    maxParticipants: 10,
+  }),
+  activityDto({
+    id: 'activity-9',
+    name: 'Falcon Heavy · Ventana Perdida',
+    slug: 'falcon-heavy-ventana-perdida',
+    price: 299999,
+    date: '2026-10-01T18:30:00.000Z',
+    duration: 2880,
+    location: 'Centro Espacial Kennedy, Florida (EE. UU.)',
+    minParticipants: 2,
+    maxParticipants: 8,
+  }),
+];
+
+export function seedActivityDto(id: string): ActivityDtoFixture {
+  const dto = seedActivityDtos.find((activity) => activity.id === id);
+  if (dto === undefined) {
+    throw new Error(`Unknown seed activity: ${id}`);
+  }
+  return dto;
+}
+
 export function launchFromDto(overrides: Partial<ActivityDtoFixture> = {}): Launch {
   return toLaunch(activityDtoSchema.parse(activityDto(overrides)));
 }

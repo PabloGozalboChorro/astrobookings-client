@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LaunchListPage } from '../../../../src/features/launches/LaunchListPage';
-import { activityDto, draftActivityDto, type ActivityDtoFixture } from '../../support/activities';
+import {
+  activityDto,
+  draftActivityDto,
+  seedActivityDtos,
+  type ActivityDtoFixture,
+} from '../../support/activities';
 import { deferred } from '../../support/deferred';
 import { jsonResponse, mockFetch, sentRequest } from '../../support/http';
 
@@ -45,6 +50,7 @@ function cardTitles(): string[] {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -139,6 +145,30 @@ describe('LaunchListPage', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('El servidor ha devuelto una respuesta inesperada.');
     expect(screen.queryByRole('article')).toBeNull();
+  });
+
+  it('R8: shows the bookability reason on the cards using the current date', async () => {
+    vi.useFakeTimers({ now: new Date('2026-11-05T10:00:00.000Z'), toFake: ['Date'] });
+    mockFetch(jsonResponse(200, seedActivityDtos));
+
+    renderPage();
+
+    expect(await screen.findAllByRole('article')).toHaveLength(8);
+    expect(screen.getByRole('article', { name: 'Ventana Perdida' })).toHaveTextContent(
+      'La fecha de este lanzamiento ya ha pasado',
+    );
+    expect(screen.getByRole('article', { name: 'Estación Orbital' })).toHaveTextContent(
+      'Agotado: no quedan plazas',
+    );
+    for (const mission of [
+      'Misión Luna',
+      'Órbita Marciana',
+      'Vuelo Suborbital',
+      'Paseo Lunar Express',
+    ]) {
+      const card = screen.getByRole('article', { name: mission });
+      expect(card.querySelector('.bookability-notice')).toBeNull();
+    }
   });
 
   it('R1: renders the launches as a list of articles under the page heading', async () => {

@@ -1,5 +1,5 @@
 import type { Page, Request } from '@playwright/test';
-import { launchDtos } from './data.ts';
+import { errorResponses, launchDtos } from './data.ts';
 
 export const API_URL = 'http://localhost:3999';
 
@@ -20,7 +20,24 @@ export type ActivitiesMock = {
   requestedUrls: URL[];
 };
 
-const defaultHandler: ActivitiesHandler = () => ({ body: launchDtos });
+const ACTIVITY_PATH_PATTERN = /^\/activities\/([^/]+)$/;
+
+export function activityIdOf(request: Request): string | null {
+  const match = ACTIVITY_PATH_PATTERN.exec(new URL(request.url()).pathname);
+  return match?.[1] === undefined ? null : decodeURIComponent(match[1]);
+}
+
+const defaultHandler: ActivitiesHandler = (request) => {
+  const id = activityIdOf(request);
+  if (id === null) {
+    return { body: launchDtos };
+  }
+  const launch = launchDtos.find((dto) => dto.id === id);
+  if (launch === undefined) {
+    return { status: 404, body: errorResponses.activityNotFound };
+  }
+  return { body: launch };
+};
 
 export async function mockActivities(
   page: Page,

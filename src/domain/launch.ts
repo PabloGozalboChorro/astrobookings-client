@@ -17,6 +17,10 @@ export type Launch = {
   status: LaunchStatus;
 };
 
+export type BookabilityReason = 'sold-out' | 'done' | 'cancelled' | 'draft' | 'past-date';
+
+export type Bookability = { bookable: true } | { bookable: false; reason: BookabilityReason };
+
 export type LaunchName = {
   rocket: string | null;
   mission: string;
@@ -32,6 +36,14 @@ const STATUS_LABELS: Readonly<Record<LaunchStatus, string>> = {
   done: 'Realizado',
   cancelled: 'Cancelado',
   draft: 'Borrador',
+};
+
+const BOOKABILITY_REASON_TEXTS: Readonly<Record<BookabilityReason, string>> = {
+  'sold-out': 'Agotado: no quedan plazas',
+  done: 'Este lanzamiento ya se ha realizado',
+  cancelled: 'Este lanzamiento se ha cancelado',
+  'past-date': 'La fecha de este lanzamiento ya ha pasado',
+  draft: 'No disponible',
 };
 
 export function parseLaunchName(name: string): LaunchName {
@@ -80,4 +92,23 @@ export function isVisible(launch: Launch): boolean {
 
 export function launchStatusLabel(status: LaunchStatus): string {
   return STATUS_LABELS[status];
+}
+
+export function getBookability(launch: Launch, now: Date): Bookability {
+  switch (launch.status) {
+    case 'draft':
+    case 'cancelled':
+    case 'done':
+    case 'sold-out':
+      return { bookable: false, reason: launch.status };
+    case 'published':
+    case 'confirmed':
+      return launch.date.getTime() > now.getTime()
+        ? { bookable: true }
+        : { bookable: false, reason: 'past-date' };
+  }
+}
+
+export function bookabilityReasonText(reason: BookabilityReason): string {
+  return BOOKABILITY_REASON_TEXTS[reason];
 }
