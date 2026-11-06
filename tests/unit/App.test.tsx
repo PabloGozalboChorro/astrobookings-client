@@ -93,6 +93,23 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('R1: renders the login page at /acceso', () => {
+    renderAt('/acceso');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveAttribute('type', 'email');
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
+  });
+
+  it('R7: shows the login link in the header without a session', () => {
+    renderAt('/lanzamientos');
+
+    expect(
+      within(screen.getByRole('banner')).getByRole('link', { name: 'Iniciar sesión' }),
+    ).toHaveAttribute('href', '/acceso?volver=%2Flanzamientos');
+  });
+
   it('R10: shows the not found page and links back to the launches', async () => {
     const user = userEvent.setup();
     renderAt('/no-existe');

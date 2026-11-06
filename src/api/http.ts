@@ -38,13 +38,22 @@ function notifySessionRejected(): void {
   }
 }
 
-function buildHeaders(auth: boolean): Headers {
+function buildHeaders(token: string | null): Headers {
   const headers = new Headers({ 'Content-Type': 'application/json' });
-  const token = auth ? getAccessToken() : null;
   if (token !== null) {
     headers.set('Authorization', `Bearer ${token}`);
   }
   return headers;
+}
+
+function missingSessionError(): ApiError {
+  return new ApiError({
+    status: 401,
+    kind: 'unauthorized',
+    message: '',
+    fieldErrors: {},
+    availableSeats: null,
+  });
 }
 
 function isAbortError(error: unknown, signal: AbortSignal | undefined): boolean {
@@ -112,10 +121,15 @@ export async function http<T>(
 ): Promise<T> {
   const { method = 'GET', body, auth = false, signal } = options;
   const baseUrl = parseApiUrl(import.meta.env.VITE_API_URL);
+  const token = auth ? getAccessToken() : null;
+  if (auth && token === null) {
+    notifySessionRejected();
+    throw missingSessionError();
+  }
 
   const response = await send(`${baseUrl}${path}`, {
     method,
-    headers: buildHeaders(auth),
+    headers: buildHeaders(token),
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
   });

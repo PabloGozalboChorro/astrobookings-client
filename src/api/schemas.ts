@@ -37,3 +37,15 @@ export const activityDtoSchema = z.object({
 });
 
 export type ActivityDto = z.infer<typeof activityDtoSchema>;
+
+export const authResponseDtoSchema = z.object({
+  user: z.object({
+    id: z.number(),
+    username: z.string(),
+    email: z.string(),
+    terms: z.boolean(),
+  }),
+  accessToken: z.string(),
+});
+
+export type AuthResponseDto = z.infer<typeof authResponseDtoSchema>;

@@ -167,4 +167,19 @@ export const errorResponses = {
   failedToRetrieveActivities: { message: 'Failed to retrieve activities', errors: [] },
   failedToRetrieveActivity: { message: 'Failed to retrieve activity', errors: [] },
   activityNotFound: { message: 'Activity not found', errors: [] },
+  invalidCredentials: { message: 'Invalid email or password', errors: [] },
+  authenticationFailed: { message: 'Authentication failed', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;
+
+export type AuthResponseFixture = {
+  user: { id: number; username: string; email: string; terms: boolean };
+  accessToken: string;
+};
+
+// Shape of a 200 POST /login of the fork (user "ana" of the spec, not a seed user).
+export function anaAuthResponse(accessToken: string): AuthResponseFixture {
+  return {
+    user: { id: 2, username: 'ana', email: 'ana@ejemplo.com', terms: true },
+    accessToken,
+  };
+}
