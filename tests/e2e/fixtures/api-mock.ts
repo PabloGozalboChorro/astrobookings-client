@@ -50,19 +50,32 @@ export const apiLikeHandler: ActivitiesHandler = (request) => {
     : activityResponse(id);
 };
 
-export type LoginHandler = (
+export type JsonPostHandler = (
   request: Request,
   attempt: number,
 ) => MockApiResponse | Promise<MockApiResponse>;
 
-export type LoginMock = {
+export type JsonPostMock = {
   requestBodies: unknown[];
 };
 
-export async function mockLogin(page: Page, handler: LoginHandler): Promise<LoginMock> {
-  const mock: LoginMock = { requestBodies: [] };
+export function mockLogin(page: Page, handler: JsonPostHandler): Promise<JsonPostMock> {
+  return mockJsonPost(page, '/login', handler);
+}
 
-  await page.route(`${API_URL}/login`, async (route) => {
+export function mockRegister(page: Page, handler: JsonPostHandler): Promise<JsonPostMock> {
+  return mockJsonPost(page, '/users', handler);
+}
+
+// Answers the CORS preflight and records the JSON body of every POST to the path.
+async function mockJsonPost(
+  page: Page,
+  path: string,
+  handler: JsonPostHandler,
+): Promise<JsonPostMock> {
+  const mock: JsonPostMock = { requestBodies: [] };
+
+  await page.route(`${API_URL}${path}`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: CORS_HEADERS });

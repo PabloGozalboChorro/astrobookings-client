@@ -169,6 +169,19 @@ export const errorResponses = {
   activityNotFound: { message: 'Activity not found', errors: [] },
   invalidCredentials: { message: 'Invalid email or password', errors: [] },
   authenticationFailed: { message: 'Authentication failed', errors: [] },
+  emailAlreadyRegistered: {
+    message: 'Email is already registered',
+    errors: [{ field: 'email', message: 'Email is already registered' }],
+  },
+  // Body of the R6 acceptance criterion of feat-user-registration.
+  registerValidationFailed: {
+    message: 'Validation failed',
+    errors: [
+      { field: 'username', message: 'Username is required' },
+      { field: 'password', message: 'Password must be at least 6 characters' },
+    ],
+  },
+  failedToRegisterUser: { message: 'Failed to register user', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;
 
 export type AuthResponseFixture = {
@@ -180,6 +193,14 @@ export type AuthResponseFixture = {
 export function anaAuthResponse(accessToken: string): AuthResponseFixture {
   return {
     user: { id: 2, username: 'ana', email: 'ana@ejemplo.com', terms: true },
+    accessToken,
+  };
+}
+
+// Shape of a 201 POST /users of the fork (R4 acceptance criterion of feat-user-registration).
+export function anaRegisterResponse(accessToken: string): AuthResponseFixture {
+  return {
+    user: { id: 3, username: 'ana', email: 'ana@ejemplo.com', terms: true },
     accessToken,
   };
 }

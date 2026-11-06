@@ -7,13 +7,22 @@ export type LoginFormErrors = Partial<Record<keyof LoginFormValues, string>>;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function validateLoginForm({ email, password }: LoginFormValues): LoginFormErrors {
-  const errors: LoginFormErrors = {};
+export function validateEmail(email: string): string | undefined {
   const trimmedEmail = email.trim();
   if (trimmedEmail === '') {
-    errors.email = 'Introduce tu email.';
-  } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
-    errors.email = 'Introduce un email válido.';
+    return 'Introduce tu email.';
+  }
+  if (!EMAIL_PATTERN.test(trimmedEmail)) {
+    return 'Introduce un email válido.';
+  }
+  return undefined;
+}
+
+export function validateLoginForm({ email, password }: LoginFormValues): LoginFormErrors {
+  const errors: LoginFormErrors = {};
+  const emailError = validateEmail(email);
+  if (emailError !== undefined) {
+    errors.email = emailError;
   }
   if (password.trim() === '') {
     errors.password = 'Introduce tu contraseña.';
