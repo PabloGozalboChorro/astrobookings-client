@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { mockActivities } from './fixtures/api-mock.ts';
 
 test.describe('app shell', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockActivities(page);
+  });
+
   test('R5: R9: redirects / to /lanzamientos and shows the layout', async ({ page }) => {
     await page.goto('/');
 

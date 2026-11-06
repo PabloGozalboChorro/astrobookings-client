@@ -14,6 +14,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Datos de prueba en el fork de la API (`activity-bookings-express`): 9 lanzamientos espaciales que cubren todos los estados, fechas pasadas, un nombre sin cohete y el caso de pago rechazado.
 - Base de comunicación con la API: cliente `http()` único con validación de respuestas, errores clasificados y mensajes en español (con el original entre paréntesis), plazas libres a partir del error de capacidad y aviso de sesión rechazada.
 - Componentes comunes de estado (carga, error con "Reintentar", vacío y campo de formulario accesible) y hook `useAsyncData` que descarta cargas antiguas.
+- Listado de lanzamientos en `/lanzamientos`: misión, cohete, lugar, fecha y hora, duración, precio en euros, plazas totales y estado; oculta los borradores, con estados de carga, vacío y error con "Reintentar", y adaptado a móvil.
 
 ### Fixed
 
