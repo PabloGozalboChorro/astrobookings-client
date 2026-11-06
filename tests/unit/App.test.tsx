@@ -141,4 +141,16 @@ describe('App', () => {
       '/lanzamientos',
     );
   });
+
+  it('R2: redirects /reservas/booking-3 to /acceso without requesting it', () => {
+    const fetchSpy = vi.mocked(globalThis.fetch);
+
+    renderAt('/reservas/booking-3');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('banner')).getByRole('link', { name: 'Iniciar sesión' }),
+    ).toHaveAttribute('href', '/acceso?volver=%2Freservas%2Fbooking-3');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });

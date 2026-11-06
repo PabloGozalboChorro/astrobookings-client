@@ -42,6 +42,7 @@ export function Layout() {
         <p className="site-brand">AstroBookings</p>
         <nav aria-label="Principal">
           <Link to="/lanzamientos">Lanzamientos</Link>
+          {session !== null && <Link to="/reservas">Mis reservas</Link>}
         </nav>
         <div className="site-session">
           {session === null ? (

@@ -59,7 +59,7 @@ export function parseLaunchName(name: string): LaunchName {
   return { rocket, mission };
 }
 
-function parseLaunchDate(value: string): Date {
+export function parseLaunchDate(value: string): Date {
   const dateOnly = DATE_ONLY_PATTERN.exec(value);
   if (dateOnly === null) {
     return new Date(value);

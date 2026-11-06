@@ -182,6 +182,10 @@ export const errorResponses = {
     ],
   },
   failedToRegisterUser: { message: 'Failed to register user', errors: [] },
+  failedToRetrieveBookings: { message: 'Failed to retrieve bookings', errors: [] },
+  failedToRetrieveBooking: { message: 'Failed to retrieve booking', errors: [] },
+  bookingNotFound: { message: 'Booking not found', errors: [] },
+  invalidToken: { message: 'Invalid or expired token. Please login again.', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;
 
 export type AuthResponseFixture = {
@@ -203,4 +207,61 @@ export function anaRegisterResponse(accessToken: string): AuthResponseFixture {
     user: { id: 3, username: 'ana', email: 'ana@ejemplo.com', terms: true },
     accessToken,
   };
+}
+
+export type PaymentStatusFixture = 'pending' | 'paid' | 'refunded';
+
+export type BookedActivityFixture = Pick<
+  ActivityDtoFixture,
+  'name' | 'slug' | 'price' | 'date' | 'duration' | 'location' | 'status'
+>;
+
+export type BookingDtoFixture = {
+  id: string;
+  activityId: string;
+  userId: string;
+  participants: number;
+  createdAt: string;
+  paymentId?: string;
+  paymentStatus: PaymentStatusFixture;
+  activity: BookedActivityFixture;
+};
+
+// Shape of GET /bookings and GET /bookings/:id of the fork (src/services/booking.service.ts):
+// the activity only carries these seven fields; paymentStatus is always present.
+export function bookingWithActivity(
+  id: string,
+  activityId: string,
+  participants: number,
+  createdAt: string,
+  paymentStatus: PaymentStatusFixture,
+  activityOverrides: Partial<BookedActivityFixture> = {},
+): BookingDtoFixture {
+  const { name, slug, price, date, duration, location, status } = findLaunchDto(activityId);
+  return {
+    id,
+    activityId,
+    userId: 'user-2',
+    participants,
+    createdAt,
+    paymentId: `payment-${id.replace('booking-', '')}`,
+    paymentStatus,
+    activity: { name, slug, price, date, duration, location, status, ...activityOverrides },
+  };
+}
+
+// Bookings of "ana" in insertion order (the fork does not sort them).
+export const bookingDtos: readonly BookingDtoFixture[] = [
+  bookingWithActivity('booking-1', 'activity-1', 2, '2026-11-03T09:00:00.000Z', 'paid'),
+  bookingWithActivity('booking-2', 'activity-3', 3, '2026-11-04T18:00:00.000Z', 'paid'),
+  bookingWithActivity('booking-3', 'activity-2', 1, '2026-11-05T12:00:00.000Z', 'pending'),
+  bookingWithActivity('booking-4', 'activity-6', 1, '2026-11-01T08:00:00.000Z', 'refunded'),
+];
+
+export function findBookingDto(id: string): BookingDtoFixture {
+  const booking = bookingDtos.find((dto) => dto.id === id);
+  if (booking === undefined) {
+    throw new Error(`Unknown booking fixture: ${id}`);
+  }
+  return booking;
 }

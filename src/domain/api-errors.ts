@@ -12,6 +12,8 @@ export const INVALID_CREDENTIALS_TEXT = 'Email o contraseña incorrectos.';
 
 export const LAUNCH_NOT_FOUND_TEXT = 'Este lanzamiento no existe o ya no está disponible.';
 
+export const BOOKING_NOT_FOUND_TEXT = 'No encontramos esta reserva.';
+
 const NO_SEATS_TEXT = 'No quedan plazas libres en este lanzamiento.';
 const UNKNOWN_SEATS_TEXT = 'No hay plazas suficientes para tu solicitud.';
 
@@ -26,7 +28,7 @@ const KNOWN_API_MESSAGES: Readonly<Record<string, string>> = {
   'Invalid or expired token. Please login again.': SESSION_TEXT,
   'Payment could not be processed': PAYMENT_TEXT,
   'Activity not found': LAUNCH_NOT_FOUND_TEXT,
-  'Booking not found': 'No encontramos esta reserva.',
+  'Booking not found': BOOKING_NOT_FOUND_TEXT,
   'Failed to retrieve activities': SERVER_TEXT,
   'Failed to retrieve bookings': SERVER_TEXT,
 };
