@@ -51,9 +51,9 @@ test.describe('launch list', () => {
     expect(mock.requestedUrls.length).toBeGreaterThan(0);
     for (const url of mock.requestedUrls) {
       expect(url.pathname).toBe('/activities');
-      expect(url.search).toBe('');
+      expect(url.search).toBe('?_sort=date&_order=asc');
     }
-    expect(finishedRequests).toEqual([`${API_URL}/activities`]);
+    expect(finishedRequests).toEqual([`${API_URL}/activities?_sort=date&_order=asc`]);
     expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
   });
 

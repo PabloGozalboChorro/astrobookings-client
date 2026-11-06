@@ -1,4 +1,5 @@
 import type { Page, Request } from '@playwright/test';
+import { queryLaunchDtos } from './activities-query.ts';
 import { errorResponses, launchDtos } from './data.ts';
 
 export const API_URL = 'http://localhost:3999';
@@ -27,16 +28,26 @@ export function activityIdOf(request: Request): string | null {
   return match?.[1] === undefined ? null : decodeURIComponent(match[1]);
 }
 
-const defaultHandler: ActivitiesHandler = (request) => {
-  const id = activityIdOf(request);
-  if (id === null) {
-    return { body: launchDtos };
-  }
+function activityResponse(id: string): MockApiResponse {
   const launch = launchDtos.find((dto) => dto.id === id);
   if (launch === undefined) {
     return { status: 404, body: errorResponses.activityNotFound };
   }
   return { body: launch };
+}
+
+// Returns the seed as is for the list, ignoring q, _sort and _order.
+const defaultHandler: ActivitiesHandler = (request) => {
+  const id = activityIdOf(request);
+  return id === null ? { body: launchDtos } : activityResponse(id);
+};
+
+// Applies q, _sort and _order to the seed like the real API (see activities-query.ts).
+export const apiLikeHandler: ActivitiesHandler = (request) => {
+  const id = activityIdOf(request);
+  return id === null
+    ? { body: queryLaunchDtos(launchDtos, new URL(request.url())) }
+    : activityResponse(id);
 };
 
 export async function mockActivities(

@@ -27,9 +27,41 @@ describe('getActivities', () => {
     const fetchSpy = mockFetch(jsonResponse(200, []));
     const controller = new AbortController();
 
-    await getActivities(controller.signal);
+    await getActivities({}, controller.signal);
 
     expect(sentRequest(fetchSpy).init.signal).toBe(controller.signal);
+  });
+
+  it('R2: getActivities sends q, _sort and _order in this order', async () => {
+    const fetchSpy = mockFetch(jsonResponse(200, []));
+
+    await getActivities({ order: 'asc', sort: 'date', q: 'falcon' });
+
+    const { url, init } = sentRequest(fetchSpy);
+    expect(url).toBe('http://localhost:3999/activities?q=falcon&_sort=date&_order=asc');
+    expect(init.method).toBe('GET');
+    expect(new Headers(init.headers).has('Authorization')).toBe(false);
+  });
+
+  it('R3: getActivities omits empty q', async () => {
+    const fetchSpy = mockFetch(jsonResponse(200, []));
+
+    await getActivities({ q: '', sort: 'price', order: 'desc' });
+
+    expect(sentRequest(fetchSpy).url).toBe(
+      'http://localhost:3999/activities?_sort=price&_order=desc',
+    );
+  });
+
+  it.each([
+    ['Órbita Marciana', 'q=%C3%93rbita+Marciana'],
+    ['a&b#c', 'q=a%26b%23c'],
+  ])('R2: getActivities encodes the search text %s as %s', async (text, encoded) => {
+    const fetchSpy = mockFetch(jsonResponse(200, []));
+
+    await getActivities({ q: text });
+
+    expect(sentRequest(fetchSpy).url).toBe(`http://localhost:3999/activities?${encoded}`);
   });
 
   it('R9: getActivities throws ContractError for [{ "id": 1 }]', async () => {

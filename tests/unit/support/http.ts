@@ -11,6 +11,18 @@ export function mockFetch(response: Response) {
   return vi.spyOn(globalThis, 'fetch').mockResolvedValue(response);
 }
 
+export function mockFetchByUrl(
+  respond: (url: URL, init: RequestInit) => Response | Promise<Response>,
+) {
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(async (input, init) => respond(new URL(String(input)), init ?? {}));
+}
+
+export function requestedUrls(fetchSpy: ReturnType<typeof mockFetch>): string[] {
+  return fetchSpy.mock.calls.map(([input]) => String(input));
+}
+
 export function sentRequest(fetchSpy: ReturnType<typeof mockFetch>): {
   url: string;
   init: RequestInit;
