@@ -24,6 +24,12 @@ body {
   border-bottom: 1px solid currentColor;
 }
 
+.site-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
 .site-brand {
   margin: 0;
   font-weight: 700;
@@ -158,4 +164,32 @@ body {
 .login-form button {
   align-self: flex-start;
   font: inherit;
+}
+
+.payment-status {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 1rem;
+  font-weight: 700;
+}
+
+.payment-status--pending {
+  border-style: dashed;
+}
+
+.booking-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.booking-detail p,
+.booking-detail h2 {
+  margin: 0;
+}
+
+.booking-detail section {
+  margin-top: 0.75rem;
 }

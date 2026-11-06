@@ -30,3 +30,11 @@ export function formatDuration(minutes: number): string {
   const dayText = days === 1 ? '1 día' : `${days} días`;
   return hours > 0 ? `${dayText} ${hours} h` : dayText;
 }
+
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'long' }).format(date);
+}
+
+export function formatSeatCount(seats: number): string {
+  return seats === 1 ? '1 plaza' : `${seats} plazas`;
+}

@@ -49,3 +49,32 @@ export const authResponseDtoSchema = z.object({
 });
 
 export type AuthResponseDto = z.infer<typeof authResponseDtoSchema>;
+
+export const paymentStatusSchema = z.enum(['pending', 'paid', 'refunded']);
+
+export const bookingDtoSchema = z.object({
+  id: z.string(),
+  activityId: z.string(),
+  userId: z.string(),
+  participants: z.number(),
+  createdAt: isoDateString,
+  paymentId: z.string().optional(),
+  paymentStatus: paymentStatusSchema.optional(),
+});
+
+export type BookingDto = z.infer<typeof bookingDtoSchema>;
+
+export const bookingWithActivityDtoSchema = bookingDtoSchema.extend({
+  paymentStatus: paymentStatusSchema,
+  activity: z.object({
+    name: z.string(),
+    slug: z.string(),
+    price: z.number(),
+    date: isoDateString,
+    duration: z.number(),
+    location: z.string(),
+    status: activityStatusSchema,
+  }),
+});
+
+export type BookingWithActivityDto = z.infer<typeof bookingWithActivityDtoSchema>;

@@ -13,6 +13,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Búsqueda y ordenación del listado de lanzamientos: búsqueda por texto con espera de 300 ms, orden por fecha, precio o nombre en ambas direcciones, todo guardado en la URL (recarga y "Atrás"), y mensaje con "Borrar búsqueda" cuando no hay coincidencias.
 - Sesión de usuario: inicio de sesión en `/acceso` con validación de campos y vuelta segura a la página de origen, sesión guardada hasta que caduca el token, nombre y "Cerrar sesión" en la cabecera, rutas protegidas que redirigen al acceso y aviso de sesión caducada.
 - Registro de cuenta en `/registro`: nombre de usuario, email, contraseña de al menos 6 caracteres y aceptación de términos, con errores por campo (incluido el email ya registrado), sesión iniciada directamente tras registrarse, enlace "Crear cuenta" en la cabecera y enlaces cruzados con `/acceso` que conservan la página de origen.
+- "Mis reservas" en `/reservas` (solo con sesión): reservas de la más reciente a la más antigua con lanzamiento, fecha, plazas, importe total y estado del pago, estado vacío con "Ver lanzamientos", errores con "Reintentar" y detalle en `/reservas/<id>` con los datos del lanzamiento y su estado actual; una reserva inexistente o ajena se muestra como "no encontrada".
 
 ## [0.1.0] - 2026-11-06
 

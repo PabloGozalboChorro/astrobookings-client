@@ -153,4 +153,21 @@ describe('Layout session header', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(screen.getByRole('alert')).toHaveTextContent(SESSION_TEXT);
   });
+
+  it('R1: shows "Mis reservas" to /reservas with a session', () => {
+    storeSession();
+
+    renderApp('/lanzamientos');
+
+    const navigation = within(header()).getByRole('navigation', { name: 'Principal' });
+    expect(
+      within(navigation).getByRole('link', { name: 'Mis reservas' }),
+    ).toHaveAttribute('href', '/reservas');
+  });
+
+  it('R1: hides "Mis reservas" without a session', () => {
+    renderApp('/lanzamientos');
+
+    expect(within(header()).queryByRole('link', { name: 'Mis reservas' })).toBeNull();
+  });
 });

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatDate,
   formatDateTime,
   formatDuration,
   formatPrice,
+  formatSeatCount,
   formatTotalSeats,
 } from '../../../src/domain/format';
 
@@ -58,5 +60,25 @@ describe('formatTotalSeats', () => {
     [6, '6 plazas en total'],
   ])('R2: formatTotalSeats(%i) is "%s"', (seats, expected) => {
     expect(formatTotalSeats(seats)).toBe(expected);
+  });
+});
+
+describe('formatDate', () => {
+  it.each([
+    ['2026-11-04T18:00:00.000Z', '4 de noviembre de 2026'],
+    ['2026-11-03T09:00:00.000Z', '3 de noviembre de 2026'],
+    ['2027-01-01T00:00:00.000Z', '1 de enero de 2027'],
+  ])('R4: formatDate(%s) is "%s"', (value, expected) => {
+    expect(formatDate(new Date(value))).toBe(expected);
+  });
+});
+
+describe('formatSeatCount', () => {
+  it.each([
+    [1, '1 plaza'],
+    [2, '2 plazas'],
+    [3, '3 plazas'],
+  ])('R4: formatSeatCount(%i) is "%s"', (seats, expected) => {
+    expect(formatSeatCount(seats)).toBe(expected);
   });
 });

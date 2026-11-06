@@ -3,6 +3,8 @@ import { StrictMode } from 'react';
 import { Link, MemoryRouter, Route, Routes } from 'react-router';
 import { Layout } from '../../../src/components/Layout';
 import type { Session } from '../../../src/domain/session';
+import { BookingDetailPage } from '../../../src/features/bookings/BookingDetailPage';
+import { MyBookingsPage } from '../../../src/features/bookings/MyBookingsPage';
 import { LoginPage } from '../../../src/features/session/LoginPage';
 import { RegisterPage } from '../../../src/features/session/RegisterPage';
 import { RequireAuth } from '../../../src/features/session/RequireAuth';
@@ -64,6 +66,8 @@ export function renderApp(path: string, { strict = false } = {}) {
             <Route path="lanzamientos/:id" element={<LocationProbe />} />
             <Route element={<RequireAuth />}>
               <Route path="protegida" element={<ProtectedProbe />} />
+              <Route path="reservas" element={<MyBookingsPage />} />
+              <Route path="reservas/:id" element={<BookingDetailPage />} />
             </Route>
           </Route>
         </Routes>

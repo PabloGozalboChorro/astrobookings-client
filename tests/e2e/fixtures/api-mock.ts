@@ -1,6 +1,6 @@
 import type { Page, Request } from '@playwright/test';
 import { queryLaunchDtos } from './activities-query.ts';
-import { errorResponses, launchDtos } from './data.ts';
+import { bookingDtos, errorResponses, launchDtos } from './data.ts';
 
 export const API_URL = 'http://localhost:3999';
 
@@ -113,6 +113,78 @@ export async function mockActivities(
 
     mock.requestedUrls.push(new URL(request.url()));
     const response = await handler(request, mock.requestedUrls.length);
+    if (response === 'abort') {
+      await route.abort('failed');
+      return;
+    }
+    await route.fulfill({
+      status: response.status ?? 200,
+      headers: CORS_HEADERS,
+      json: response.body,
+    });
+  });
+
+  return mock;
+}
+
+export type BookingsHandler = (
+  request: Request,
+  attempt: number,
+) => MockApiResponse | Promise<MockApiResponse>;
+
+export type BookingRequest = { url: URL; authorization: string | null };
+
+export type BookingsMock = {
+  requests: BookingRequest[];
+};
+
+// Keeps a mocked response pending until the test calls release().
+export function holdResponses(): { release: () => void; released: Promise<void> } {
+  let release: () => void = () => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return { release, released };
+}
+
+const BOOKING_PATH_PATTERN =/^\/bookings\/([^/]+)$/;
+
+export function bookingIdOf(request: Request): string | null {
+  const match = BOOKING_PATH_PATTERN.exec(new URL(request.url()).pathname);
+  return match?.[1] === undefined ? null : decodeURIComponent(match[1]);
+}
+
+// Like the fork: the list in insertion order and 404 for a missing booking (or another user's).
+export const defaultBookingsHandler: BookingsHandler = (request) => {
+  const id = bookingIdOf(request);
+  if (id === null) {
+    return { body: bookingDtos };
+  }
+  const booking = bookingDtos.find((dto) => dto.id === id);
+  return booking === undefined
+    ? { status: 404, body: errorResponses.bookingNotFound }
+    : { body: booking };
+};
+
+// Answers the CORS preflight and records the URL and Authorization header of every GET.
+export async function mockBookings(
+  page: Page,
+  handler: BookingsHandler = defaultBookingsHandler,
+): Promise<BookingsMock> {
+  const mock: BookingsMock = { requests: [] };
+
+  await page.route(`${API_URL}/bookings**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: CORS_HEADERS });
+      return;
+    }
+
+    mock.requests.push({
+      url: new URL(request.url()),
+      authorization: await request.headerValue('authorization'),
+    });
+    const response = await handler(request, mock.requests.length);
     if (response === 'abort') {
       await route.abort('failed');
       return;
