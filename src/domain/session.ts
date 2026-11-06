@@ -14,6 +14,8 @@ export const SESSION_FALLBACK_DURATION_MS = 86_400_000;
 
 export const LOGIN_PATH = '/acceso';
 
+export const REGISTER_PATH = '/registro';
+
 export const DEFAULT_RETURN_PATH = '/lanzamientos';
 
 const tokenClaimsSchema = z.object({ exp: z.number().positive() });
@@ -83,6 +85,7 @@ export function resolveReturnPath(volver: string | null): string {
     volver.includes('\\') ||
     hasControlCharacter(volver) ||
     volver.startsWith(LOGIN_PATH) ||
+    volver.startsWith(REGISTER_PATH) ||
     !staysOnSameOrigin(volver)
   ) {
     return DEFAULT_RETURN_PATH;
@@ -90,6 +93,14 @@ export function resolveReturnPath(volver: string | null): string {
   return volver;
 }
 
+export function authPagePath(base: string, volver: string | null): string {
+  return volver === null ? base : `${base}?volver=${encodeURIComponent(volver)}`;
+}
+
 export function loginPath(returnTo: string): string {
-  return `${LOGIN_PATH}?volver=${encodeURIComponent(returnTo)}`;
+  return authPagePath(LOGIN_PATH, returnTo);
+}
+
+export function registerPath(returnTo: string): string {
+  return authPagePath(REGISTER_PATH, returnTo);
 }

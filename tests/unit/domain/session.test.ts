@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  authPagePath,
   createSession,
   getTokenExpiry,
   isExpired,
   loginPath,
+  registerPath,
   resolveReturnPath,
   SESSION_FALLBACK_DURATION_MS,
   type Session,
@@ -103,6 +105,8 @@ describe('resolveReturnPath', () => {
     ['/\\malicioso.example', '/lanzamientos'],
     ['/acceso', '/lanzamientos'],
     ['/acceso?volver=%2Fx', '/lanzamientos'],
+    ['/registro', '/lanzamientos'],
+    ['/registro?volver=/x', '/lanzamientos'],
     ['', '/lanzamientos'],
     [null, '/lanzamientos'],
   ])('R5: resolves "%s" to "%s"', (volver, expected) => {
@@ -127,5 +131,23 @@ describe('loginPath', () => {
     expect(loginPath('/lanzamientos/activity-1')).toBe(
       '/acceso?volver=%2Flanzamientos%2Factivity-1',
     );
+  });
+});
+
+describe('registerPath', () => {
+  it('R7: builds the register path with the encoded return path', () => {
+    expect(registerPath('/lanzamientos/activity-1')).toBe(
+      '/registro?volver=%2Flanzamientos%2Factivity-1',
+    );
+  });
+});
+
+describe('authPagePath', () => {
+  it.each<[string, string | null, string]>([
+    ['/registro', '/reservas', '/registro?volver=%2Freservas'],
+    ['/acceso', '/reservas', '/acceso?volver=%2Freservas'],
+    ['/registro', null, '/registro'],
+  ])('R8: authPagePath(%s, %j)', (base, volver, expected) => {
+    expect(authPagePath(base, volver)).toBe(expected);
   });
 });

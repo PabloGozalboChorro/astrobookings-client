@@ -102,6 +102,17 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
+  it('R1: renders the registration page at /registro', () => {
+    renderAt('/registro');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Crear cuenta' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Nombre de usuario')).toBeInTheDocument();
+    expect(
+      screen.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }),
+    ).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeInTheDocument();
+  });
+
   it('R7: shows the login link in the header without a session', () => {
     renderAt('/lanzamientos');
 

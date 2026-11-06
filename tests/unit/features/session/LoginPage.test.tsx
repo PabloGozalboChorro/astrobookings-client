@@ -309,6 +309,27 @@ describe('LoginPage', () => {
     expect(currentLocation()).toBe('/protegida');
   });
 
+  it('R8: links to /registro keeping volver', async () => {
+    const user = userEvent.setup();
+    renderApp('/acceso?volver=/reservas');
+    const registerLink = screen.getByRole('link', { name: '¿No tienes cuenta? Crea una' });
+    expect(registerLink).toHaveAttribute('href', '/registro?volver=%2Freservas');
+
+    await user.click(registerLink);
+
+    expect(currentLocation()).toBe('/registro?volver=%2Freservas');
+    expect(screen.getByRole('heading', { level: 1, name: 'Crear cuenta' })).toBeInTheDocument();
+  });
+
+  it('R8: links to /registro without volver', () => {
+    renderApp('/acceso');
+
+    expect(screen.getByRole('link', { name: '¿No tienes cuenta? Crea una' })).toHaveAttribute(
+      'href',
+      '/registro',
+    );
+  });
+
   it('R11: shows the expired session notice without a link', () => {
     storeSession({ expiresAt: NOW.getTime() - 1 });
 

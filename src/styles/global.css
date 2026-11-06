@@ -151,6 +151,10 @@ body {
   font: inherit;
 }
 
+.login-form input[type='checkbox'] {
+  width: auto;
+}
+
 .login-form button {
   align-self: flex-start;
   font: inherit;

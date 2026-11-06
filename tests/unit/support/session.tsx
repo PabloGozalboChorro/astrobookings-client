@@ -4,6 +4,7 @@ import { Link, MemoryRouter, Route, Routes } from 'react-router';
 import { Layout } from '../../../src/components/Layout';
 import type { Session } from '../../../src/domain/session';
 import { LoginPage } from '../../../src/features/session/LoginPage';
+import { RegisterPage } from '../../../src/features/session/RegisterPage';
 import { RequireAuth } from '../../../src/features/session/RequireAuth';
 import { SessionProvider } from '../../../src/features/session/SessionProvider';
 import { SESSION_STORAGE_KEY } from '../../../src/features/session/session-storage';
@@ -58,6 +59,7 @@ export function renderApp(path: string, { strict = false } = {}) {
         <Routes>
           <Route element={<Layout />}>
             <Route path="acceso" element={<LoginPage />} />
+            <Route path="registro" element={<RegisterPage />} />
             <Route path="lanzamientos" element={<LocationProbe />} />
             <Route path="lanzamientos/:id" element={<LocationProbe />} />
             <Route element={<RequireAuth />}>

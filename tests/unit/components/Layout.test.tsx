@@ -46,6 +46,52 @@ describe('Layout session header', () => {
     );
   });
 
+  it('R7: links to /registro with the current route without a session', () => {
+    renderApp('/lanzamientos/activity-1');
+
+    expect(within(header()).getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+      'href',
+      '/registro?volver=%2Flanzamientos%2Factivity-1',
+    );
+  });
+
+  it('R7: hides the register link with a session', () => {
+    storeSession();
+
+    renderApp('/lanzamientos/activity-1');
+
+    expect(within(header()).queryByRole('link', { name: 'Crear cuenta' })).toBeNull();
+  });
+
+  it.each(['/registro?volver=%2Fx', '/acceso?volver=%2Fx'])(
+    'R7: keeps volver in both header links on %s without nesting it',
+    (path) => {
+      renderApp(path);
+
+      expect(within(header()).getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+        'href',
+        '/registro?volver=%2Fx',
+      );
+      expect(within(header()).getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+        'href',
+        '/acceso?volver=%2Fx',
+      );
+    },
+  );
+
+  it('R7: links to the bare auth pages from /registro without volver', () => {
+    renderApp('/registro');
+
+    expect(within(header()).getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+      'href',
+      '/registro',
+    );
+    expect(within(header()).getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+      'href',
+      '/acceso',
+    );
+  });
+
   it.each([false, true])(
     'R9: signs out, clears localStorage and goes to /lanzamientos (strict mode: %s)',
     async (strict) => {

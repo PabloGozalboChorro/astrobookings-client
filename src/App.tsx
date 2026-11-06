@@ -5,6 +5,7 @@ import { loadConfig } from './config';
 import { LaunchDetailPage } from './features/launches/LaunchDetailPage';
 import { LaunchListPage } from './features/launches/LaunchListPage';
 import { LoginPage } from './features/session/LoginPage';
+import { RegisterPage } from './features/session/RegisterPage';
 import { SessionProvider } from './features/session/SessionProvider';
 
 export function App() {
@@ -22,6 +23,7 @@ export function App() {
           <Route path="lanzamientos" element={<LaunchListPage />} />
           <Route path="lanzamientos/:id" element={<LaunchDetailPage />} />
           <Route path="acceso" element={<LoginPage />} />
+          <Route path="registro" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

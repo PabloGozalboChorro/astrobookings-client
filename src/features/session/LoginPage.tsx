@@ -1,10 +1,10 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Navigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { login } from '../../api/auth';
 import { ErrorMessage } from '../../components/ErrorMessage';
 import { FormField } from '../../components/FormField';
 import { fieldErrorMessages } from '../../domain/api-errors';
-import { resolveReturnPath } from '../../domain/session';
+import { authPagePath, REGISTER_PATH, resolveReturnPath } from '../../domain/session';
 import { loginErrorMessage, validateLoginForm, type LoginFormErrors } from './login-form';
 import { SessionExpiredNotice } from './SessionExpiredNotice';
 import { useSession } from './use-session';
@@ -22,9 +22,10 @@ export function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<LoginFormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const inFlight = useRef(false);
+  const volver = searchParams.get('volver');
 
   if (session !== null) {
-    return <Navigate to={resolveReturnPath(searchParams.get('volver'))} replace />;
+    return <Navigate to={resolveReturnPath(volver)} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -83,6 +84,9 @@ export function LoginPage() {
           {submitting ? 'Entrando…' : 'Iniciar sesión'}
         </button>
       </form>
+      <p>
+        <Link to={authPagePath(REGISTER_PATH, volver)}>¿No tienes cuenta? Crea una</Link>
+      </p>
     </section>
   );
 }
