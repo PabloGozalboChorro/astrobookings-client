@@ -6,4 +6,5 @@ process.env.TZ = 'UTC';
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
 });

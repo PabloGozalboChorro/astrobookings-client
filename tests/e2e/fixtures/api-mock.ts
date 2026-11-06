@@ -50,6 +50,41 @@ export const apiLikeHandler: ActivitiesHandler = (request) => {
     : activityResponse(id);
 };
 
+export type LoginHandler = (
+  request: Request,
+  attempt: number,
+) => MockApiResponse | Promise<MockApiResponse>;
+
+export type LoginMock = {
+  requestBodies: unknown[];
+};
+
+export async function mockLogin(page: Page, handler: LoginHandler): Promise<LoginMock> {
+  const mock: LoginMock = { requestBodies: [] };
+
+  await page.route(`${API_URL}/login`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: CORS_HEADERS });
+      return;
+    }
+
+    mock.requestBodies.push(request.postDataJSON());
+    const response = await handler(request, mock.requestBodies.length);
+    if (response === 'abort') {
+      await route.abort('failed');
+      return;
+    }
+    await route.fulfill({
+      status: response.status ?? 200,
+      headers: CORS_HEADERS,
+      json: response.body,
+    });
+  });
+
+  return mock;
+}
+
 export async function mockActivities(
   page: Page,
   handler: ActivitiesHandler = defaultHandler,

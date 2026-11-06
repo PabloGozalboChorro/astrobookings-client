@@ -45,12 +45,21 @@ describe('http', () => {
     expect(headers.has('Authorization')).toBe(false);
   });
 
-  it('R1: does not send Authorization when auth is requested but there is no token', async () => {
+  it('R11: does not call fetch for an authenticated request without a valid token', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onSessionRejected(listener);
     const fetchSpy = mockFetch(jsonResponse(200, { id: 'b1' }));
 
-    await http('/bookings', idSchema, { auth: true });
+    const error = await captureError(http('/bookings', idSchema, { auth: true }));
+    unsubscribe();
 
-    expect(sentHeaders(fetchSpy).has('Authorization')).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 401, kind: 'unauthorized', message: '' });
+    expect(toUserMessage(error)).toBe(
+      'Tu sesión ha caducado o no es válida. Inicia sesión de nuevo.',
+    );
   });
 
   it('R1: serialises the body as JSON and uses the given method', async () => {
@@ -269,6 +278,7 @@ describe('session rejected', () => {
     'R12: does not notify on a %i of an authenticated request',
     async (status) => {
       const listener = subscribe();
+      setAccessTokenGetter(() => 'abc.def.ghi');
       mockFetch(jsonResponse(status, { message: 'Nope', errors: [] }));
 
       await captureError(http('/bookings', idSchema, { auth: true }));

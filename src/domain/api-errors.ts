@@ -5,8 +5,10 @@ const NETWORK_TEXT =
   'No se puede conectar con el servidor de AstroBookings. Comprueba tu conexión e inténtalo de nuevo.';
 const SERVER_TEXT = 'Se ha producido un error en el servidor. Inténtalo de nuevo más tarde.';
 const CONTRACT_TEXT = 'El servidor ha devuelto una respuesta inesperada.';
-const SESSION_TEXT = 'Tu sesión ha caducado o no es válida. Inicia sesión de nuevo.';
+export const SESSION_TEXT = 'Tu sesión ha caducado o no es válida. Inicia sesión de nuevo.';
 const PAYMENT_TEXT = 'El pago no se ha podido procesar. La reserva no se ha realizado.';
+
+export const INVALID_CREDENTIALS_TEXT = 'Email o contraseña incorrectos.';
 
 export const LAUNCH_NOT_FOUND_TEXT = 'Este lanzamiento no existe o ya no está disponible.';
 
@@ -19,7 +21,7 @@ const EMAIL_ALREADY_REGISTERED_TEXT = 'Ya existe una cuenta con este email.';
 const KNOWN_API_MESSAGES: Readonly<Record<string, string>> = {
   'Validation failed': 'Revisa los datos marcados.',
   [EMAIL_ALREADY_REGISTERED_MESSAGE]: EMAIL_ALREADY_REGISTERED_TEXT,
-  'Invalid email or password': 'Email o contraseña incorrectos.',
+  'Invalid email or password': INVALID_CREDENTIALS_TEXT,
   'Authentication required. Please provide a valid token.': SESSION_TEXT,
   'Invalid or expired token. Please login again.': SESSION_TEXT,
   'Payment could not be processed': PAYMENT_TEXT,
