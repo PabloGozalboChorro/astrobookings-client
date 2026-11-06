@@ -6,6 +6,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-06
+
 ### Added
 
 - Estructura inicial del proyecto para Spec-Driven Development: `AGENTS.md`, agentes, instrucciones, prompts y skills en `.agents/`.
@@ -19,3 +21,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 ### Fixed
 
 - API (fork `activity-bookings-express`): el login funciona con usuarios existentes y recién registrados, el registro ya no sobrescribe usuarios y, tras reiniciar, las reservas y los pagos nuevos no reutilizan ids.
+
+[Unreleased]: https://github.com/PabloGozalboChorro/astrobookings-client/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/PabloGozalboChorro/astrobookings-client/releases/tag/v0.1.0
