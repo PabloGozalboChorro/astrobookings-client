@@ -3,7 +3,7 @@
 - **Estado:** Aprobada
 - **PRD:** F2, F3, F4 (+ D6; partes de F17 y F18)
 - **Rama:** `feat/user-session`
-- **Depende de:** `feat-error-handling` (y `feat-launch-list`, destino por defecto tras entrar o salir)
+- **Depende de:** `feat-error-handling` (y `feat-launch-list`, destino por defecto tras entrar o salir); `fix-api-user-session` en el fork para funcionar contra la API real
 - **Prioridad:** Must
 
 ## Contexto

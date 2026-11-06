@@ -3,7 +3,7 @@
 - **Estado:** Aprobada
 - **PRD:** F1 (+ D6; partes de F17 y F18)
 - **Rama:** `feat/user-registration`
-- **Depende de:** `feat-user-session`
+- **Depende de:** `feat-user-session`; `fix-api-user-session` en el fork para funcionar contra la API real
 - **Prioridad:** Must
 
 ## Contexto

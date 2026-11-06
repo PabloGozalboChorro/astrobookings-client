@@ -579,6 +579,7 @@ Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las sk
 | R10 | Reloj del navegador desajustado | Caducidad o reservabilidad por fecha mal calculadas | El 401 de la API es la fuente final para la sesión; para la fecha, el riesgo se acepta |
 | R11 | La API acepta `participants` decimales | Reservas con 1,5 plazas | El cliente solo envía enteros ≥ 1 (validación del formulario y del recurso) |
 | R12 | Versiones nuevas de React Router / Zod / Vitest con cambios incompatibles con las plantillas | Fricción en el scaffolding | Fijar versiones en `package-lock.json`; el scaffolding verifica que las plantillas compilan |
+| R13 | Defecto del fork: los servicios de usuarios, reservas y pagos se crean antes de cargar `db/` (detectado en `chore-seed-space-launches`) | `POST /login` siempre 401; el registro sobrescribe `user-1`; tras reiniciar, las reservas y pagos nuevos reutilizan ids y sobrescriben los existentes | Spec `fix-api-user-session` en el fork, sin cambiar el contrato; requisito previo de `feat-user-session` y `feat-user-registration` contra la API real |
 
 ## 12. Trazabilidad
 
