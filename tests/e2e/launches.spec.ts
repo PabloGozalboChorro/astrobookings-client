@@ -2,6 +2,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { API_URL, mockActivities } from './fixtures/api-mock.ts';
 import { draftLaunchDto, errorResponses, launchDtos } from './fixtures/data.ts';
+import { launchCard } from './fixtures/locators.ts';
 
 const LOADING_TEXT = 'Cargando lanzamientos…';
 const EMPTY_TEXT = 'No hay lanzamientos disponibles en este momento.';
@@ -25,10 +26,6 @@ test.use({ timezoneId: 'UTC', locale: 'es-ES' });
 
 function launchCards(page: Page) {
   return page.getByRole('article');
-}
-
-function launchCard(page: Page, mission: string) {
-  return page.getByRole('article', { name: mission, exact: true });
 }
 
 function isActivitiesListRequest(url: string): boolean {

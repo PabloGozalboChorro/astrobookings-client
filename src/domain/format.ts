@@ -12,6 +12,10 @@ export function formatDateTime(date: Date): string {
   return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'full', timeStyle: 'short' }).format(date);
 }
 
+export function formatTotalSeats(totalSeats: number): string {
+  return totalSeats === 1 ? '1 plaza en total' : `${totalSeats} plazas en total`;
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < MINUTES_PER_HOUR) {
     return `${minutes} min`;

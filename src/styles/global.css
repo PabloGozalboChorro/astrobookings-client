@@ -65,3 +65,22 @@ body {
 .launch-card__status {
   font-weight: 700;
 }
+
+.launch-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.launch-detail p {
+  margin: 0;
+}
+
+.bookability-notice {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid currentColor;
+  border-left-width: 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+}

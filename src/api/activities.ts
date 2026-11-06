@@ -7,3 +7,7 @@ const activityListSchema = z.array(activityDtoSchema);
 export function getActivities(signal?: AbortSignal): Promise<ActivityDto[]> {
   return http('/activities', activityListSchema, { signal });
 }
+
+export function getActivity(id: string, signal?: AbortSignal): Promise<ActivityDto> {
+  return http(`/activities/${encodeURIComponent(id)}`, activityDtoSchema, { signal });
+}

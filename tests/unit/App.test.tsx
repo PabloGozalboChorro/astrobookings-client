@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/App';
-import { jsonResponse } from './support/http';
+import { activityDto } from './support/activities';
+import { jsonResponse, mockFetch } from './support/http';
 
 const CONFIG_ERROR_MESSAGE = 'Error de configuración: falta la variable VITE_API_URL.';
 
@@ -79,6 +80,16 @@ describe('App', () => {
     );
     expect(
       within(screen.getByRole('main')).getByRole('heading', { level: 1, name: 'Lanzamientos' }),
+    ).toBeInTheDocument();
+  });
+
+  it('R1: renders the launch detail at /lanzamientos/:id', async () => {
+    mockFetch(jsonResponse(200, activityDto()));
+
+    renderAt('/lanzamientos/activity-1');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Misión Luna' }),
     ).toBeInTheDocument();
   });
 

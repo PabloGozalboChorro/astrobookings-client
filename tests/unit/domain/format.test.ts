@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, formatDuration, formatPrice } from '../../../src/domain/format';
+import {
+  formatDateTime,
+  formatDuration,
+  formatPrice,
+  formatTotalSeats,
+} from '../../../src/domain/format';
 
 function normalizeSpaces(text: string): string {
   return text.replace(/\u00a0|\u202f/g, ' ');
@@ -44,5 +49,14 @@ describe('formatDuration', () => {
     [4320, '3 días'],
   ])('R6: formats %i minutes as "%s"', (minutes, expected) => {
     expect(formatDuration(minutes)).toBe(expected);
+  });
+});
+
+describe('formatTotalSeats', () => {
+  it.each([
+    [1, '1 plaza en total'],
+    [6, '6 plazas en total'],
+  ])('R2: formatTotalSeats(%i) is "%s"', (seats, expected) => {
+    expect(formatTotalSeats(seats)).toBe(expected);
   });
 });

@@ -7,7 +7,7 @@ test.describe('app shell edge cases', () => {
   });
 
   test('R10: shows the not found page for a nested unknown route', async ({ page }) => {
-    await page.goto('/lanzamientos/no-existe');
+    await page.goto('/lanzamientos/no-existe/otra');
 
     await expect(page.getByRole('heading', { name: 'Página no encontrada' })).toBeVisible();
 

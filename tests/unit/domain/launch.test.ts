@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bookabilityReasonText,
+  getBookability,
   isVisible,
   launchStatusLabel,
   parseLaunchName,
+  type BookabilityReason,
   type LaunchStatus,
 } from '../../../src/domain/launch';
-import { launchFromDto } from '../support/activities';
+import { launchFromDto, seedActivityDto } from '../support/activities';
 
 describe('parseLaunchName', () => {
   it.each([
@@ -90,5 +93,68 @@ describe('launchStatusLabel', () => {
     ['draft', 'Borrador'],
   ])('R2: labels status %s as "%s"', (status, label) => {
     expect(launchStatusLabel(status)).toBe(label);
+  });
+});
+
+describe('getBookability', () => {
+  const NOW = new Date('2026-11-05T10:00:00.000Z');
+
+  function seedLaunch(id: string) {
+    return launchFromDto(seedActivityDto(id));
+  }
+
+  it.each(['activity-1', 'activity-2'])('R6: %s is bookable', (id) => {
+    expect(getBookability(seedLaunch(id), NOW)).toEqual({ bookable: true });
+  });
+
+  it.each<[string, BookabilityReason]>([
+    ['activity-9', 'past-date'],
+    ['activity-4', 'sold-out'],
+    ['activity-5', 'cancelled'],
+    ['activity-6', 'done'],
+    ['activity-7', 'draft'],
+  ])('R6: %s is not bookable because of %s', (id, reason) => {
+    expect(getBookability(seedLaunch(id), NOW)).toEqual({ bookable: false, reason });
+  });
+
+  it.each<LaunchStatus>(['published', 'confirmed'])(
+    'R6: a %s launch dated exactly now is not bookable (past-date)',
+    (status) => {
+      const launch = launchFromDto({ status, date: NOW.toISOString() });
+
+      expect(getBookability(launch, NOW)).toEqual({ bookable: false, reason: 'past-date' });
+    },
+  );
+
+  it.each<LaunchStatus>(['published', 'confirmed'])(
+    'R6: a %s launch 1 ms after now is bookable',
+    (status) => {
+      const launch = launchFromDto({ status, date: new Date(NOW.getTime() + 1).toISOString() });
+
+      expect(getBookability(launch, NOW)).toEqual({ bookable: true });
+    },
+  );
+
+  it.each<[LaunchStatus, BookabilityReason]>([
+    ['draft', 'draft'],
+    ['cancelled', 'cancelled'],
+    ['done', 'done'],
+    ['sold-out', 'sold-out'],
+  ])('R6: reason priority %s with a past date gives %s', (status, reason) => {
+    const launch = launchFromDto({ status, date: '2026-01-01T00:00:00.000Z' });
+
+    expect(getBookability(launch, NOW)).toEqual({ bookable: false, reason });
+  });
+});
+
+describe('bookabilityReasonText', () => {
+  it.each<[BookabilityReason, string]>([
+    ['sold-out', 'Agotado: no quedan plazas'],
+    ['done', 'Este lanzamiento ya se ha realizado'],
+    ['cancelled', 'Este lanzamiento se ha cancelado'],
+    ['past-date', 'La fecha de este lanzamiento ya ha pasado'],
+    ['draft', 'No disponible'],
+  ])('R7: bookabilityReasonText(%s) is "%s"', (reason, text) => {
+    expect(bookabilityReasonText(reason)).toBe(text);
   });
 });

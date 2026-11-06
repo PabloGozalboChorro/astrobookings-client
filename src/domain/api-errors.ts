@@ -8,6 +8,8 @@ const CONTRACT_TEXT = 'El servidor ha devuelto una respuesta inesperada.';
 const SESSION_TEXT = 'Tu sesión ha caducado o no es válida. Inicia sesión de nuevo.';
 const PAYMENT_TEXT = 'El pago no se ha podido procesar. La reserva no se ha realizado.';
 
+export const LAUNCH_NOT_FOUND_TEXT = 'Este lanzamiento no existe o ya no está disponible.';
+
 const NO_SEATS_TEXT = 'No quedan plazas libres en este lanzamiento.';
 const UNKNOWN_SEATS_TEXT = 'No hay plazas suficientes para tu solicitud.';
 
@@ -21,7 +23,7 @@ const KNOWN_API_MESSAGES: Readonly<Record<string, string>> = {
   'Authentication required. Please provide a valid token.': SESSION_TEXT,
   'Invalid or expired token. Please login again.': SESSION_TEXT,
   'Payment could not be processed': PAYMENT_TEXT,
-  'Activity not found': 'Este lanzamiento no existe o ya no está disponible.',
+  'Activity not found': LAUNCH_NOT_FOUND_TEXT,
   'Booking not found': 'No encontramos esta reserva.',
   'Failed to retrieve activities': SERVER_TEXT,
   'Failed to retrieve bookings': SERVER_TEXT,
