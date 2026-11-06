@@ -84,3 +84,30 @@ body {
   border-radius: 0.25rem;
   font-weight: 700;
 }
+
+.launch-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.launch-filters__field {
+  display: flex;
+  flex: 1 1 12rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.launch-filters__field input,
+.launch-filters__field select {
+  width: 100%;
+  font: inherit;
+}
+
+@media (max-width: 30rem) {
+  .launch-filters__field {
+    flex-basis: 100%;
+  }
+}

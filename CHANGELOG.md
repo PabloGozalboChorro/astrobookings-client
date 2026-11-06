@@ -10,6 +10,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 - Detalle de lanzamiento en `/lanzamientos/<id>` con todos sus datos y enlace para volver; un id inexistente o un borrador se muestran como "no encontrado", y los errores de red o servidor ofrecen "Reintentar".
 - Motivo por el que un lanzamiento no se puede reservar (cancelado, realizado, agotado o fecha pasada), en el detalle y en las tarjetas del listado.
+- Búsqueda y ordenación del listado de lanzamientos: búsqueda por texto con espera de 300 ms, orden por fecha, precio o nombre en ambas direcciones, todo guardado en la URL (recarga y "Atrás"), y mensaje con "Borrar búsqueda" cuando no hay coincidencias.
 
 ## [0.1.0] - 2026-11-06
 
