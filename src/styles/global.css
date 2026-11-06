@@ -35,3 +35,33 @@ body {
   margin: 0 auto;
   padding: 1rem;
 }
+
+.launch-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.launch-card {
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.launch-card p {
+  margin: 0.25rem 0;
+}
+
+.launch-card__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.launch-card__status {
+  font-weight: 700;
+}

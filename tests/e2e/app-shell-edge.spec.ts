@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { mockActivities } from './fixtures/api-mock.ts';
 
 test.describe('app shell edge cases', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockActivities(page);
+  });
+
   test('R10: shows the not found page for a nested unknown route', async ({ page }) => {
     await page.goto('/lanzamientos/no-existe');
 

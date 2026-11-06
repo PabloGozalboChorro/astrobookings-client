@@ -1,8 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/App';
+import { jsonResponse } from './support/http';
 
 const CONFIG_ERROR_MESSAGE = 'Error de configuración: falta la variable VITE_API_URL.';
 
@@ -19,6 +20,16 @@ function expectConfigErrorInsteadOfApp() {
   expect(screen.queryByRole('banner')).toBeNull();
   expect(screen.queryByRole('main')).toBeNull();
 }
+
+beforeEach(() => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+    Promise.resolve(jsonResponse(200, [])),
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('App', () => {
   it('R4: renders the launches heading at /lanzamientos', () => {

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
 import { NotFoundPage } from './components/NotFoundPage';
 import { loadConfig } from './config';
+import { LaunchListPage } from './features/launches/LaunchListPage';
 
 export function App() {
   const config = loadConfig();
@@ -14,7 +15,7 @@ export function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Navigate to="/lanzamientos" replace />} />
-        <Route path="lanzamientos" element={<h1>Lanzamientos</h1>} />
+        <Route path="lanzamientos" element={<LaunchListPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
