@@ -120,7 +120,7 @@ El perfil **Proveedor** (quien crea y gestiona lanzamientos) existe en la API pe
 | Listado, búsqueda y orden (F5–F7) | `GET /activities?q=&_sort=&_order=` | No |
 | Detalle de lanzamiento (F8) | `GET /activities/:id` | No |
 | Crear reserva (F9–F13) | `POST /bookings` | Sí |
-| Mis reservas (F14, F19) | `GET /bookings?activityId=` | Sí |
+| Mis reservas (F14, F19) | `GET /bookings` (el filtro por lanzamiento se aplica en el cliente; `?activityId=` existe pero no se usa, ADR-009 del ADD) | Sí |
 | Detalle de reserva (F15) | `GET /bookings/:id` | Sí |
 
 ### Comportamiento de la API que condiciona el producto
