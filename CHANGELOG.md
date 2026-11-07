@@ -6,6 +6,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
 ### Added
 
 - Detalle de lanzamiento en `/lanzamientos/<id>` con todos sus datos y enlace para volver; un id inexistente o un borrador se muestran como "no encontrado", y los errores de red o servidor ofrecen "Reintentar".
@@ -33,5 +35,6 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 - API (fork `activity-bookings-express`): el login funciona con usuarios existentes y recién registrados, el registro ya no sobrescribe usuarios y, tras reiniciar, las reservas y los pagos nuevos no reutilizan ids.
 
-[Unreleased]: https://github.com/PabloGozalboChorro/astrobookings-client/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/PabloGozalboChorro/astrobookings-client/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/PabloGozalboChorro/astrobookings-client/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/PabloGozalboChorro/astrobookings-client/releases/tag/v0.1.0
