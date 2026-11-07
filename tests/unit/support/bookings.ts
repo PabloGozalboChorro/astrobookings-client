@@ -59,6 +59,24 @@ export function suborbitalBookingDto(overrides: BookingDtoOverrides = {}): Booki
   });
 }
 
+export type CreatedBookingDtoFixture = Omit<BookingDtoFixture, 'activity'>;
+
+// Shape of the 201 of POST /bookings in the fork: the booking without its activity.
+export function createdBookingDto(
+  overrides: Partial<CreatedBookingDtoFixture> = {},
+): CreatedBookingDtoFixture {
+  return {
+    id: 'booking-7',
+    activityId: 'activity-1',
+    userId: 'user-2',
+    participants: 2,
+    createdAt: '2026-11-05T10:00:00.000Z',
+    paymentId: 'payment-7',
+    paymentStatus: 'paid',
+    ...overrides,
+  };
+}
+
 export function bookingFromDto(overrides: BookingDtoOverrides = {}): Booking {
   return toBooking(bookingWithActivityDtoSchema.parse(bookingDto(overrides)));
 }

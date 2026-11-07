@@ -14,6 +14,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - Sesión de usuario: inicio de sesión en `/acceso` con validación de campos y vuelta segura a la página de origen, sesión guardada hasta que caduca el token, nombre y "Cerrar sesión" en la cabecera, rutas protegidas que redirigen al acceso y aviso de sesión caducada.
 - Registro de cuenta en `/registro`: nombre de usuario, email, contraseña de al menos 6 caracteres y aceptación de términos, con errores por campo (incluido el email ya registrado), sesión iniciada directamente tras registrarse, enlace "Crear cuenta" en la cabecera y enlaces cruzados con `/acceso` que conservan la página de origen.
 - "Mis reservas" en `/reservas` (solo con sesión): reservas de la más reciente a la más antigua con lanzamiento, fecha, plazas, importe total y estado del pago, estado vacío con "Ver lanzamientos", errores con "Reintentar" y detalle en `/reservas/<id>` con los datos del lanzamiento y su estado actual; una reserva inexistente o ajena se muestra como "no encontrada".
+- Reserva de plazas desde el detalle de un lanzamiento reservable: número de plazas con importe total en vivo, validación sin superar las plazas, un solo envío por reserva y "Reserva confirmada" en `/reservas/<id>`; avisos de plazas libres (con el máximo ajustado), pago rechazado, sesión caducada y errores de red o servidor. Sin sesión se ofrecen "Iniciar sesión" y "Crear cuenta" con vuelta al lanzamiento.
 
 ## [0.1.0] - 2026-11-06
 

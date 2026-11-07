@@ -186,7 +186,43 @@ export const errorResponses = {
   failedToRetrieveBooking: { message: 'Failed to retrieve booking', errors: [] },
   bookingNotFound: { message: 'Booking not found', errors: [] },
   invalidToken: { message: 'Invalid or expired token. Please login again.', errors: [] },
+  // Literals of POST /bookings in the fork (src/routes/bookings.ts, booking.service.ts).
+  capacityExceededWithoutSeats: { message: 'Capacity exceeded', errors: [] },
+  paymentFailed: { message: 'Payment could not be processed', errors: [] },
+  bookingValidationFailed: {
+    message: 'Validation failed',
+    errors: [
+      {
+        field: 'participants',
+        message: 'Participants is required and must be a positive number (at least 1)',
+      },
+    ],
+  },
+  failedToCreateBooking: { message: 'Failed to create booking', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;
+
+export function capacityExceeded(available: number, requested: number): ErrorResponseFixture {
+  return { message: `Capacity exceeded. Available: ${available}, Requested: ${requested}`, errors: [] };
+}
+
+export type CreatedBookingDtoFixture = Omit<BookingDtoFixture, 'activity'>;
+
+// Shape of a 201 POST /bookings of the fork: the booking without its activity, always paid.
+export function createdBookingDto(
+  id: string,
+  activityId: string,
+  participants: number,
+): CreatedBookingDtoFixture {
+  return {
+    id,
+    activityId,
+    userId: 'user-2',
+    participants,
+    createdAt: '2026-11-05T10:00:00.000Z',
+    paymentId: `payment-${id.replace('booking-', '')}`,
+    paymentStatus: 'paid',
+  };
+}
 
 export type AuthResponseFixture = {
   user: { id: number; username: string; email: string; terms: boolean };

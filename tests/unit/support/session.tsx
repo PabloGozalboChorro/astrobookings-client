@@ -5,6 +5,7 @@ import { Layout } from '../../../src/components/Layout';
 import type { Session } from '../../../src/domain/session';
 import { BookingDetailPage } from '../../../src/features/bookings/BookingDetailPage';
 import { MyBookingsPage } from '../../../src/features/bookings/MyBookingsPage';
+import { LaunchDetailPage } from '../../../src/features/launches/LaunchDetailPage';
 import { LoginPage } from '../../../src/features/session/LoginPage';
 import { RegisterPage } from '../../../src/features/session/RegisterPage';
 import { RequireAuth } from '../../../src/features/session/RequireAuth';
@@ -52,7 +53,7 @@ export function currentLocation(): string {
   return screen.getByRole('status', { name: 'Ubicación actual' }).textContent ?? '';
 }
 
-export function renderApp(path: string, { strict = false } = {}) {
+export function renderApp(path: string, { strict = false, launchDetail = false } = {}) {
   const tree = (
     <MemoryRouter initialEntries={[path]}>
       <SessionProvider>
@@ -63,7 +64,10 @@ export function renderApp(path: string, { strict = false } = {}) {
             <Route path="acceso" element={<LoginPage />} />
             <Route path="registro" element={<RegisterPage />} />
             <Route path="lanzamientos" element={<LocationProbe />} />
-            <Route path="lanzamientos/:id" element={<LocationProbe />} />
+            <Route
+              path="lanzamientos/:id"
+              element={launchDetail ? <LaunchDetailPage /> : <LocationProbe />}
+            />
             <Route element={<RequireAuth />}>
               <Route path="protegida" element={<ProtectedProbe />} />
               <Route path="reservas" element={<MyBookingsPage />} />

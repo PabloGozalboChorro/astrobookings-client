@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getBooking, getMyBookings } from '../../../src/api/bookings';
+import { createBooking, getBooking, getMyBookings } from '../../../src/api/bookings';
 import { ApiError, ContractError, isNotFoundError } from '../../../src/api/errors';
 import { onSessionRejected, setAccessTokenGetter } from '../../../src/api/http';
 import { bookingDtoSchema, bookingWithActivityDtoSchema } from '../../../src/api/schemas';
-import { bookingDto, suborbitalBookingDto, type BookingDtoFixture } from '../support/bookings';
+import {
+  bookingDto,
+  createdBookingDto,
+  suborbitalBookingDto,
+  type BookingDtoFixture,
+} from '../support/bookings';
 import { captureError, jsonResponse, mockFetch, sentRequest } from '../support/http';
 
 const TOKEN = 'abc.def.ghi';
@@ -158,6 +163,112 @@ describe('getBooking', () => {
 
     expect(listener).toHaveBeenCalledTimes(1);
     expect(error).toMatchObject({ status: 401, kind: 'unauthorized' });
+  });
+});
+
+describe('createBooking', () => {
+  const REQUEST = { activityId: 'activity-1', participants: 2 };
+
+  it('R6: sends POST /bookings with the token and the JSON body', async () => {
+    signIn();
+    const fetchSpy = mockFetch(jsonResponse(201, createdBookingDto()));
+
+    const booking = await createBooking(REQUEST);
+
+    const { url, init } = sentRequest(fetchSpy);
+    expect(url).toBe('http://localhost:3999/bookings');
+    expect(init.method).toBe('POST');
+    expect(new Headers(init.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
+    expect(init.body).toBe('{"activityId":"activity-1","participants":2}');
+    expect(booking).toEqual(createdBookingDto());
+  });
+
+  it.each<[string, number | null]>([
+    ['Capacity exceeded. Available: 2, Requested: 5', 2],
+    ['Capacity exceeded. Available: 0, Requested: 2', 0],
+    ['Capacity exceeded', null],
+  ])('R10: rejects with a capacity ApiError with the available seats for "%s"', async (message, availableSeats) => {
+    signIn();
+    mockFetch(jsonResponse(400, { message, errors: [] }));
+
+    const error = await captureError(createBooking(REQUEST));
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 400, kind: 'capacity', availableSeats });
+  });
+
+  it('R11: rejects with a payment ApiError on 402', async () => {
+    signIn();
+    mockFetch(jsonResponse(402, { message: 'Payment could not be processed', errors: [] }));
+
+    const error = await captureError(createBooking(REQUEST));
+
+    expect(error).toMatchObject({ status: 402, kind: 'payment' });
+  });
+
+  it('R12: rejects with a not-found ApiError on 404 Activity not found', async () => {
+    signIn();
+    mockFetch(jsonResponse(404, { message: 'Activity not found', errors: [] }));
+
+    const error = await captureError(createBooking(REQUEST));
+
+    expect(isNotFoundError(error)).toBe(true);
+  });
+
+  it('R12: rejects with a validation ApiError with the participants error', async () => {
+    signIn();
+    const message = 'Participants is required and must be a positive number (at least 1)';
+    mockFetch(
+      jsonResponse(400, {
+        message: 'Validation failed',
+        errors: [{ field: 'participants', message }],
+      }),
+    );
+
+    const error = await captureError(createBooking(REQUEST));
+
+    expect(error).toMatchObject({
+      status: 400,
+      kind: 'validation',
+      fieldErrors: { participants: message },
+    });
+  });
+
+  it('R12: notifies the session rejection on 401', async () => {
+    signIn();
+    const listener = vi.fn();
+    const unsubscribe = onSessionRejected(listener);
+    mockFetch(jsonResponse(401, INVALID_TOKEN_BODY));
+
+    const error = await captureError(createBooking(REQUEST));
+    unsubscribe();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(error).toMatchObject({ status: 401, kind: 'unauthorized' });
+  });
+
+  it('R12: does not call fetch without a token', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onSessionRejected(listener);
+    const fetchSpy = mockFetch(jsonResponse(201, createdBookingDto()));
+
+    const error = await captureError(createBooking(REQUEST));
+    unsubscribe();
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(error).toMatchObject({ status: 401, kind: 'unauthorized' });
+  });
+
+  it('R12: rejects with ContractError for a 201 without id', async () => {
+    signIn();
+    const withoutId: Partial<ReturnType<typeof createdBookingDto>> = createdBookingDto();
+    delete withoutId.id;
+    mockFetch(jsonResponse(201, withoutId));
+
+    const error = await captureError(createBooking(REQUEST));
+
+    expect(error).toBeInstanceOf(ContractError);
   });
 });
 

@@ -2,7 +2,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SESSION_STORAGE_KEY } from '../../../../src/features/session/session-storage';
-import { bookingDto } from '../../support/bookings';
+import { seedActivityDto } from '../../support/activities';
+import { bookingDto, createdBookingDto } from '../../support/bookings';
 import { deferred } from '../../support/deferred';
 import { jsonResponse, mockFetchByUrl } from '../../support/http';
 import { currentLocation, renderApp, SESSION_TEXT, storeSession } from '../../support/session';
@@ -171,5 +172,92 @@ describe('BookingDetailPage', () => {
     });
     expect(screen.getByRole('alert')).toHaveTextContent(SESSION_TEXT);
     expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe('BookingDetailPage after creating a booking', () => {
+  const CREATED_LOAD_ERROR_TEXT =
+    'Tu reserva se ha creado correctamente (referencia booking-7), pero no hemos podido cargar sus datos.';
+
+  function mockCreationApi(detail: () => Response) {
+    return mockFetchByUrl((url, init) => {
+      if (url.pathname === '/activities/activity-1') {
+        return jsonResponse(200, seedActivityDto('activity-1'));
+      }
+      if (url.pathname === '/bookings' && init.method === 'POST') {
+        return jsonResponse(201, createdBookingDto());
+      }
+      return detail();
+    });
+  }
+
+  async function bookTwoSeats() {
+    const user = userEvent.setup();
+    renderApp('/lanzamientos/activity-1', { launchDetail: true });
+    await screen.findByLabelText('Número de plazas');
+    await user.click(screen.getByRole('button', { name: 'Reservar' }));
+    return user;
+  }
+
+  it('R8: hides the confirmation without justCreated', async () => {
+    storeSession();
+    mockFetchByUrl(() => jsonResponse(200, bookingDto({ id: 'booking-7' })));
+
+    renderApp('/reservas/booking-7');
+
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Tu reserva' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Reserva confirmada')).toBeNull();
+    expect(within(main()).queryByRole('link', { name: 'Ver mis reservas' })).toBeNull();
+  });
+
+  it('R8: shows the confirmation right after the level 1 heading', async () => {
+    storeSession();
+    mockCreationApi(() => jsonResponse(200, bookingDto({ id: 'booking-7' })));
+
+    await bookTwoSeats();
+
+    const confirmation = await screen.findByRole('region', { name: 'Reserva confirmada' });
+    const heading = screen.getByRole('heading', { level: 1, name: 'Misión Luna' });
+    expect(heading.nextElementSibling).toBe(confirmation);
+    expect(screen.queryByRole('heading', { name: 'Tu reserva' })).toBeNull();
+  });
+
+  it('R9: shows the created reference when the detail fails', async () => {
+    storeSession();
+    let attempt = 0;
+    mockCreationApi(() => {
+      attempt += 1;
+      return attempt === 1
+        ? jsonResponse(500, { message: 'Internal Server Error', errors: [] })
+        : jsonResponse(200, bookingDto({ id: 'booking-7' }));
+    });
+
+    const user = await bookTwoSeats();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(CREATED_LOAD_ERROR_TEXT);
+    expect(currentLocation()).toBe('/reservas/booking-7');
+    expect(within(main()).getByRole('link', { name: 'Ver mis reservas' })).toHaveAttribute(
+      'href',
+      '/reservas',
+    );
+
+    await user.click(within(alert).getByRole('button', { name: 'Reintentar' }));
+
+    expect(
+      await screen.findByRole('region', { name: 'Reserva confirmada' }),
+    ).toBeInTheDocument();
+  });
+
+  it('R9: shows the created reference when the detail returns 404', async () => {
+    storeSession();
+    mockCreationApi(() => jsonResponse(404, { message: 'Booking not found', errors: [] }));
+
+    await bookTwoSeats();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(CREATED_LOAD_ERROR_TEXT);
+    expect(screen.queryByText(NOT_FOUND_TEXT)).toBeNull();
   });
 });

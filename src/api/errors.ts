@@ -52,6 +52,10 @@ export function isNotFoundError(error: unknown): error is ApiError {
   return error instanceof ApiError && error.kind === 'not-found';
 }
 
+export function isUnauthorizedError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.kind === 'unauthorized';
+}
+
 export function classifyApiError(status: number, body: ErrorResponseDto | null): ApiErrorKind {
   if (status === 400 && body !== null && body.errors.length > 0) {
     return 'validation';

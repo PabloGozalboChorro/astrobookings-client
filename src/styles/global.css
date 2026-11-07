@@ -193,3 +193,36 @@ body {
 .booking-detail section {
   margin-top: 0.75rem;
 }
+
+.booking-section {
+  margin-top: 1rem;
+  max-width: 24rem;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.booking-form input {
+  width: 100%;
+  font: inherit;
+}
+
+.booking-form button {
+  align-self: flex-start;
+  font: inherit;
+}
+
+.booking-access p {
+  margin: 0 0 0.5rem;
+}
+
+.booking-detail .booking-confirmation {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 2px solid currentColor;
+  border-radius: 0.5rem;
+}
