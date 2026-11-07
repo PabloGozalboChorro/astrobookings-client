@@ -132,7 +132,12 @@ export type BookingsHandler = (
   attempt: number,
 ) => MockApiResponse | Promise<MockApiResponse>;
 
-export type BookingRequest = { url: URL; authorization: string | null };
+export type BookingRequest = {
+  method: string;
+  url: URL;
+  authorization: string | null;
+  body: unknown;
+};
 
 export type BookingsMock = {
   requests: BookingRequest[];
@@ -166,7 +171,8 @@ export const defaultBookingsHandler: BookingsHandler = (request) => {
     : { body: booking };
 };
 
-// Answers the CORS preflight and records the URL and Authorization header of every GET.
+// Answers the CORS preflight and records the method, URL, Authorization header and JSON body
+// (POST only) of every request.
 export async function mockBookings(
   page: Page,
   handler: BookingsHandler = defaultBookingsHandler,
@@ -180,9 +186,12 @@ export async function mockBookings(
       return;
     }
 
+    const method = request.method();
     mock.requests.push({
+      method,
       url: new URL(request.url()),
       authorization: await request.headerValue('authorization'),
+      body: method === 'POST' ? request.postDataJSON() : null,
     });
     const response = await handler(request, mock.requests.length);
     if (response === 'abort') {

@@ -3,9 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { Link, MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LaunchDetailPage } from '../../../../src/features/launches/LaunchDetailPage';
+import { SessionProvider } from '../../../../src/features/session/SessionProvider';
 import { draftActivityDto, seedActivityDtos } from '../../support/activities';
 import { deferred } from '../../support/deferred';
 import { jsonResponse, mockFetch } from '../../support/http';
+import { storeSession } from '../../support/session';
 
 const NOW = new Date('2026-11-05T10:00:00.000Z');
 const LOADING_TEXT = 'Cargando lanzamiento…';
@@ -23,10 +25,12 @@ const REASON_TEXTS = [
 function renderAt(path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
-      <Link to="/lanzamientos/activity-2">Ir a activity-2</Link>
-      <Routes>
-        <Route path="/lanzamientos/:id" element={<LaunchDetailPage />} />
-      </Routes>
+      <SessionProvider>
+        <Link to="/lanzamientos/activity-2">Ir a activity-2</Link>
+        <Routes>
+          <Route path="/lanzamientos/:id" element={<LaunchDetailPage />} />
+        </Routes>
+      </SessionProvider>
     </MemoryRouter>,
   );
 }
@@ -315,6 +319,62 @@ describe('LaunchDetailPage', () => {
     const heading = await screen.findByRole('heading', { level: 1, name: 'Misión Luna' });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('article')).toContainElement(heading);
+  });
+
+  it('R2 (booking): shows the sign-in and sign-up links without a session', async () => {
+    mockSeedApi();
+
+    renderAt('/lanzamientos/activity-1');
+
+    const region = await screen.findByRole('region', { name: 'Reservar plazas' });
+    expect(region).toHaveTextContent('Inicia sesión o crea una cuenta para reservar.');
+    expect(within(region).getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+      'href',
+      '/acceso?volver=%2Flanzamientos%2Factivity-1',
+    );
+    expect(within(region).getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+      'href',
+      '/registro?volver=%2Flanzamientos%2Factivity-1',
+    );
+    expectNoBookingOption();
+  });
+
+  it('R2 (booking): shows no links for a non-bookable launch', async () => {
+    mockSeedApi();
+
+    renderAt('/lanzamientos/activity-4');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Estación Orbital' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Reservar plazas' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Crear cuenta' })).toBeNull();
+  });
+
+  it('R1 (booking): shows no form for activity-4 (sold-out) with a session', async () => {
+    storeSession();
+    mockSeedApi();
+
+    renderAt('/lanzamientos/activity-4');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Estación Orbital' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Agotado: no quedan plazas')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Reservar plazas' })).toBeNull();
+    expectNoBookingOption();
+  });
+
+  it('R1 (booking): shows the booking section without the access links with a session', async () => {
+    storeSession();
+    mockSeedApi();
+
+    renderAt('/lanzamientos/activity-1');
+
+    const region = await screen.findByRole('region', { name: 'Reservar plazas' });
+    expect(region).not.toHaveTextContent('Inicia sesión o crea una cuenta para reservar.');
+    expect(within(region).queryByRole('link', { name: 'Iniciar sesión' })).toBeNull();
   });
 
   it('R3: the not found screen has a single level 1 heading', async () => {

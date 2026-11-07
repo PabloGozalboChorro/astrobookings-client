@@ -14,6 +14,9 @@ export const LAUNCH_NOT_FOUND_TEXT = 'Este lanzamiento no existe o ya no está d
 
 export const BOOKING_NOT_FOUND_TEXT = 'No encontramos esta reserva.';
 
+export const INVALID_PARTICIPANTS_TEXT =
+  'Introduce un número entero de plazas mayor o igual que 1.';
+
 const NO_SEATS_TEXT = 'No quedan plazas libres en este lanzamiento.';
 const UNKNOWN_SEATS_TEXT = 'No hay plazas suficientes para tu solicitud.';
 
@@ -31,6 +34,7 @@ const KNOWN_API_MESSAGES: Readonly<Record<string, string>> = {
   'Booking not found': BOOKING_NOT_FOUND_TEXT,
   'Failed to retrieve activities': SERVER_TEXT,
   'Failed to retrieve bookings': SERVER_TEXT,
+  'Failed to create booking': SERVER_TEXT,
 };
 
 const GENERIC_TEXT_BY_STATUS: Readonly<Record<number, string>> = {
@@ -53,7 +57,7 @@ const FIELD_ERROR_TEXTS: Readonly<Record<string, string>> = {
   email: 'Introduce un email válido.',
   password: 'La contraseña debe tener al menos 6 caracteres.',
   terms: 'Debes aceptar los términos y condiciones.',
-  participants: 'Introduce un número entero de plazas mayor o igual que 1.',
+  participants: INVALID_PARTICIPANTS_TEXT,
   activityId: 'El lanzamiento indicado no es válido.',
 };
 

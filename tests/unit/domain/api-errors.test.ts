@@ -101,6 +101,10 @@ describe('toUserMessage', () => {
     expect(toUserMessage(apiError(status, message, errors))).toBe(expected);
   });
 
+  it('R12: maps "Failed to create booking" to the server text', () => {
+    expect(toUserMessage(apiError(400, 'Failed to create booking'))).toBe(SERVER_TEXT);
+  });
+
   it.each<[string, string]>([
     ['Capacity exceeded. Available: 2, Requested: 5', 'Solo quedan 2 plazas libres.'],
     ['Capacity exceeded. Available: 1, Requested: 3', 'Solo queda 1 plaza libre.'],

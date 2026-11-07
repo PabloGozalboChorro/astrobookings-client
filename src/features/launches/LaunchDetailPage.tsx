@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Link, useParams } from 'react-router';
 import { isNotFoundError } from '../../api/errors';
 import { ErrorMessage } from '../../components/ErrorMessage';
@@ -11,11 +12,30 @@ import {
 } from '../../domain/format';
 import { getBookability, isVisible, launchStatusLabel, type Launch } from '../../domain/launch';
 import { useNow } from '../../hooks/use-now';
+import { BookingForm } from '../bookings/BookingForm';
+import { useSession } from '../session/use-session';
 import { BookabilityNotice } from './BookabilityNotice';
+import { BookingAccess } from './BookingAccess';
 import { LaunchNotFound } from './LaunchNotFound';
 import { useLaunch } from './use-launch';
 
 const LOADING_TEXT = 'Cargando lanzamiento…';
+
+type BookingSectionProps = {
+  launch: Launch;
+};
+
+function BookingSection({ launch }: BookingSectionProps) {
+  const { session } = useSession();
+  const titleId = useId();
+
+  return (
+    <section className="booking-section" aria-labelledby={titleId}>
+      <h2 id={titleId}>Reservar plazas</h2>
+      {session === null ? <BookingAccess /> : <BookingForm launch={launch} />}
+    </section>
+  );
+}
 
 type LaunchDetailProps = {
   launch: Launch;
@@ -39,7 +59,11 @@ function LaunchDetail({ launch, now }: LaunchDetailProps) {
       <p>{formatTotalSeats(launch.totalSeats)}</p>
       <p>Mínimo de viajeros para confirmar el lanzamiento: {launch.minParticipants}</p>
       <p>{launchStatusLabel(launch.status)}</p>
-      {!bookability.bookable && <BookabilityNotice reason={bookability.reason} />}
+      {bookability.bookable ? (
+        <BookingSection launch={launch} />
+      ) : (
+        <BookabilityNotice reason={bookability.reason} />
+      )}
       <p>
         <Link to="/lanzamientos">Volver a los lanzamientos</Link>
       </p>
