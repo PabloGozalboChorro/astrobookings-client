@@ -32,6 +32,12 @@ const KNOWN_API_MESSAGES: Readonly<Record<string, string>> = {
   'Payment could not be processed': PAYMENT_TEXT,
   'Activity not found': LAUNCH_NOT_FOUND_TEXT,
   'Booking not found': BOOKING_NOT_FOUND_TEXT,
+  'Activity is not bookable: draft': 'Este lanzamiento no está disponible para reservar.',
+  'Activity is not bookable: cancelled': 'Este lanzamiento se ha cancelado y no se puede reservar.',
+  'Activity is not bookable: done': 'Este lanzamiento ya se ha realizado y no se puede reservar.',
+  'Activity is not bookable: sold-out': 'Este lanzamiento está agotado: no quedan plazas.',
+  'Activity is not bookable: past-date':
+    'La fecha de este lanzamiento ya ha pasado y no se puede reservar.',
   'Failed to retrieve activities': SERVER_TEXT,
   'Failed to retrieve bookings': SERVER_TEXT,
   'Failed to create booking': SERVER_TEXT,

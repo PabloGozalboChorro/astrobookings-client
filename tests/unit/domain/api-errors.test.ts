@@ -114,6 +114,31 @@ describe('toUserMessage', () => {
     expect(toUserMessage(apiError(400, message))).toBe(expected);
   });
 
+  it.each<[string, string]>([
+    ['Activity is not bookable: draft', 'Este lanzamiento no está disponible para reservar.'],
+    [
+      'Activity is not bookable: cancelled',
+      'Este lanzamiento se ha cancelado y no se puede reservar.',
+    ],
+    [
+      'Activity is not bookable: done',
+      'Este lanzamiento ya se ha realizado y no se puede reservar.',
+    ],
+    ['Activity is not bookable: sold-out', 'Este lanzamiento está agotado: no quedan plazas.'],
+    [
+      'Activity is not bookable: past-date',
+      'La fecha de este lanzamiento ya ha pasado y no se puede reservar.',
+    ],
+  ])('R10 (bookable launch): translates "%s"', (message, expected) => {
+    expect(toUserMessage(apiError(400, message))).toBe(expected);
+  });
+
+  it('R10 (bookable launch): keeps the generic text for an unknown reason', () => {
+    expect(toUserMessage(apiError(400, 'Activity is not bookable: archived'))).toBe(
+      'No se ha podido completar la operación (Activity is not bookable: archived)',
+    );
+  });
+
   it('R7: shows the generic text and the original message for an unknown message', () => {
     expect(toUserMessage(apiError(400, 'Launch window closed'))).toBe(
       'No se ha podido completar la operación (Launch window closed)',
