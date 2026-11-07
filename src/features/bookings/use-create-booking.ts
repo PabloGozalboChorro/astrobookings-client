@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { createBooking, type CreateBookingRequest } from '../../api/bookings';
 import { isUnauthorizedError } from '../../api/errors';
 import { loginPath } from '../../domain/session';
+import { useCurrentPath } from '../../hooks/use-current-path';
 
 export type CreateBookingOutcome =
   | { status: 'ignored' }
@@ -18,8 +19,7 @@ export type JustCreatedState = { justCreated: true };
 
 export function useCreateBooking(): CreateBooking {
   const navigate = useNavigate();
-  const location = useLocation();
-  const currentPath = `${location.pathname}${location.search}`;
+  const currentPath = useCurrentPath();
   const inFlight = useRef(false);
   const [submitting, setSubmitting] = useState(false);
 

@@ -10,13 +10,14 @@ import {
 } from '../domain/session';
 import { SessionExpiredNotice } from '../features/session/SessionExpiredNotice';
 import { useSession } from '../features/session/use-session';
+import { useCurrentPath } from '../hooks/use-current-path';
 
 export function Layout() {
   const { session, expiredNotice, signOut } = useSession();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const currentPath = `${location.pathname}${location.search}`;
+  const currentPath = useCurrentPath();
   const onLoginPage = location.pathname === LOGIN_PATH;
   const onAuthPage = onLoginPage || location.pathname === REGISTER_PATH;
   // On the auth pages the header links keep the current volver instead of nesting it.
