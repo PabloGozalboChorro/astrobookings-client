@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Added
+
+- Smoke e2e opcional contra la API real con `npm run test:e2e:smoke` (registro, inicio de sesión, reserva, "Mis reservas" y rechazo de un lanzamiento agotado), con comprobación previa de que la API y la app están en marcha; documentado en el `README.md`.
+
 ### Fixed
 
 - API (fork `activity-bookings-express`): las reservas en lanzamientos en borrador, cancelados, realizados, agotados o con fecha pasada se rechazan con un 400 sin cobrar ni crear la reserva; el formulario de reserva muestra el motivo en español.
