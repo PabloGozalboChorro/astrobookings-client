@@ -1,7 +1,7 @@
 # ADD — AstroBookings Client
 
 - **Estado:** Aprobado (2026-11-05)
-- **Última actualización:** 2026-11-05
+- **Última actualización:** 2026-11-07 (ADR-013: la API rechaza reservas en lanzamientos no reservables; smoke sobre `activity-2`; hook `use-current-path`)
 - **PRD de referencia:** [PRD.md](PRD.md)
 
 ## 1. Visión general
@@ -96,6 +96,7 @@ src/
     session.ts             type Session, getTokenExpiry(token) (exp del JWT), isExpired(session, now)
   hooks/
     use-async-data.ts      Hook genérico de carga: { status: loading | error | ready }, cancelación con AbortController
+    use-current-path.ts    useCurrentPath(): pathname + search (sin hash), origen único de `volver` (chore-current-path)
   components/
     Layout.tsx             Cabecera, navegación, estado de sesión y botón "Cerrar sesión"; <main>
     LoadingIndicator.tsx   role="status"
@@ -171,7 +172,7 @@ Notas:
 | 2 | POST | `/login` | No | `{ email, password }` | **200** `AuthResponse` | 400 `Validation failed` (campos vacíos); **401** `Invalid email or password` (no indica cuál falla) | F2 |
 | 3 | GET | `/activities?q=&_sort=&_order=` | No | `q` busca en `name`, `location`, `slug` (sin distinguir mayúsculas); `_sort` ∈ `name` \| `date` \| `price`; `_order` ∈ `asc` \| `desc` | **200** `Activity[]` (incluye `draft`) | 500 `Failed to retrieve activities` | F5–F7 |
 | 4 | GET | `/activities/:id` | No | — | **200** `Activity` | 404 `Activity not found` | F8 |
-| 5 | POST | `/bookings` | **Sí** | `{ activityId, participants }` (`participants` número ≥ 1) | **201** `Booking` **sin** el objeto `activity` | 400 `Validation failed` + `errors[]` (`activityId`, `participants`); 400 `Capacity exceeded. Available: X, Requested: Y`; 401; **402** `Payment could not be processed`; 404 `Activity not found` | F9–F13 |
+| 5 | POST | `/bookings` | **Sí** | `{ activityId, participants }` (`participants` número ≥ 1) | **201** `Booking` **sin** el objeto `activity` | En este orden (responde con la primera que falla): 401; 400 `Validation failed` + `errors[]` (`activityId`, `participants`); 404 `Activity not found`; 400 `Activity is not bookable: <draft\|cancelled\|done\|sold-out\|past-date>` + `errors: []` (ADR-013); 400 `Capacity exceeded. Available: X, Requested: Y`; **402** `Payment could not be processed` | F9–F13, F11 |
 | 6 | GET | `/bookings` | **Sí** | (`?activityId=` existe pero no se usa, ADR-009) | **200** `BookingWithActivity[]` (solo las de la persona) | 401; 500 `Failed to retrieve bookings` (p. ej. si una reserva apunta a una actividad borrada) | F14, F16, F19 |
 | 7 | GET | `/bookings/:id` | **Sí** | — | **200** `BookingWithActivity` | 401; 404 `Booking not found` (no existe **o** no es de la persona) | F13, F15, F16 |
 
@@ -182,6 +183,7 @@ Detalles del contrato que condicionan el cliente:
 - La validación de `participants` en la API solo exige `typeof number` y `≥ 1`: acepta decimales. El cliente garantiza un **entero** ≥ 1.
 - Los mensajes de la API están **en inglés**; la interfaz es en español (D8). El cliente los traduce (ADR-008).
 - El cobro se intenta **después** de comprobar las plazas: un 402 implica que había plazas pero el pago (importe múltiplo de 1000) falló; no se crea reserva ni pago.
+- `POST /bookings` aplica la misma regla que `getBookability` (§6): reservable si `status ∈ {published, confirmed}` **y** `date > now` (reloj del servidor); si no, 400 `Activity is not bookable: <motivo>` con la prioridad `draft` > `cancelled` > `done` > `sold-out` > `past-date`. Una fecha no interpretable cuenta como `past-date`. El rechazo es anterior a la comprobación de plazas y al cobro: no se crea reserva ni pago (spec `fix-api-bookable-launch`, ADR-013).
 
 ### 4.2 Modelos
 
@@ -382,6 +384,7 @@ Búsqueda (F6): el campo actualiza `?q=` con *debounce* de 300 ms; el orden (F7)
    - 201 → `navigate('/reservas/<id>', { state: { justCreated: true } })`; la página de detalle pide `GET /bookings/:id` (que sí trae la actividad) y muestra la confirmación con lanzamiento, plazas, importe y estado, y enlace a "Mis reservas" (F13).
    - 400 `capacity` → "Solo quedan X plazas libres" (X de `availableSeats`); el `max` del campo pasa a X; si X = 0, se indica que no quedan plazas y se deshabilita el envío (F10).
    - 402 → "El pago no se ha podido procesar. La reserva no se ha realizado." (F12).
+   - 400 `Activity is not bookable: <motivo>` (`kind: 'server'`) → alerta con el motivo en español (ADR-008, ADR-013); "Reservar" sigue habilitado. Solo ocurre si el lanzamiento cambió desde que se cargó el detalle o si los relojes difieren (R10).
    - 400 `validation` → errores junto al campo (F17).
    - 401 → flujo global (F4). 404 → "El lanzamiento ya no existe". Red → mensaje de conexión.
 
@@ -410,7 +413,7 @@ Búsqueda (F6): el campo actualiza `?q=` con *debounce* de 300 ms; el orden (F7)
 - `VITE_API_URL` es obligatoria. `src/config.ts` la lee una vez; si falta, la app muestra un error de configuración claro en vez de pedir a `undefined/...`. Se normaliza quitando la `/` final.
 - Ficheros: `.env.example` (documenta la variable), `.env.development` (versionado, `http://localhost:3000`, no es secreto ni entorno real), `.env.e2e` (versionado, `http://localhost:3999`, puerto sin servidor), `.env` y `.env.local` para sobrescrituras personales (ya ignorados en `.gitignore`).
 - **CORS:** resuelto por la propia API (`cors()`); sin proxy. Si un fork lo quitara, la solución sería añadir `server.proxy` en `vite.config.ts` y apuntar `VITE_API_URL` a `/api` (no se implementa ahora).
-- Scripts de npm: `dev` (`vite`), `build` (`tsc -b && vite build`), `preview`, `typecheck` (`tsc --noEmit`), `lint` (`eslint .`), `test` (`vitest run`), `test:e2e` (`playwright test --project=chromium --project=firefox`), `test:e2e:smoke` (`playwright test --project=smoke`).
+- Scripts de npm: `dev` (`vite`), `build` (`tsc -b && vite build`), `preview`, `typecheck` (`tsc --noEmit`), `lint` (`eslint .`), `test` (`vitest run`), `test:e2e` (`playwright test --project=chromium --project=firefox`), `test:e2e:smoke` (`playwright test --project=smoke --pass-with-no-tests`).
 - Puertos: app en 5173 (desarrollo); e2e en 5174 (`vite --mode e2e --port 5174 --strictPort`) para no chocar con un `npm run dev` abierto.
 
 ## 8. Datos de ejemplo (D5)
@@ -497,7 +500,7 @@ El fichero completo es objeto de una spec `chore` (repositorio del fork, no de e
 | Unitario (cliente API) | Vitest + `vi.spyOn(globalThis, 'fetch')` | `http()`: URL base, cabecera Bearer, parseo de `errors[]`, clasificación por `kind`, `NetworkError` cuando `fetch` rechaza, `ContractError` con forma inválida, 401 con `auth: true` notifica a la sesión y con `auth: false` no; recursos: método, ruta, cuerpo (`terms: true`), parámetros de consulta | `fetch` mockeado en el borde con respuestas copiadas de la API real |
 | Componentes | Vitest + Testing Library + user-event (jsdom) | Formularios (labels, errores por campo, envío), `BookingForm` (importe en vivo, botón deshabilitado al enviar, doble clic = una petición, mensajes 400/402), `LaunchCard`/`BookabilityNotice`, `RequireAuth` (redirección), `SessionProvider` (persistencia y caducidad), estados cargando/error/vacío de cada página | Se mockea el módulo `src/api/*` (no la lógica); `MemoryRouter` para rutas |
 | E2E (determinista) | Playwright + `page.route` | Un test por criterio de aceptación de cada spec: registro, login, logout, sesión caducada (401 simulado), listado sin drafts, búsqueda y orden (se comprueban los parámetros enviados), detalle, reserva correcta → confirmación, capacidad excedida, pago rechazado, no reservable por estado/fecha, Mis reservas, filtro, detalle de reserva ajena (404), API caída (`route.abort()`), móvil (viewport 375 px) | `tests/e2e/fixtures/api-mock.ts` intercepta `http://localhost:3999/**`; cualquier petición no interceptada falla (puerto sin servidor). Sesión inyectada con `page.addInitScript` en `localStorage` cuando el test no prueba el login. Chromium + Firefox |
-| Smoke e2e (opcional) | Playwright, proyecto `smoke` | Un recorrido feliz contra la API real: registro con email único → listado → reservar 1 plaza en `activity-1` → ver en Mis reservas | Requiere el fork en marcha con la semilla (§8). No forma parte de `test:e2e`; se ejecuta con `npm run test:e2e:smoke`. Escribe datos en el fork |
+| Smoke e2e (opcional) | Playwright, proyecto `smoke` | Un recorrido feliz contra la API real: registro con email único → cerrar e iniciar sesión → reservar 1 plaza en `activity-2` (`confirmed`, 12 plazas) → confirmación → ver en Mis reservas; y rechazo de la API a reservar en `activity-4` (`sold-out`, ADR-013) | Requiere el fork en marcha con la semilla (§8) y `fix-api-bookable-launch`. No forma parte de `test:e2e`; se ejecuta con `npm run test:e2e:smoke`. Escribe datos en el fork (limpieza con `git restore db/`). Cada ejecución ocupa 1 plaza de `activity-2` (máx. 12 sin restaurar) y deja de funcionar a partir del 2027-06-01, cuando pasa su fecha (spec `chore-smoke-e2e`) |
 
 Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las skills; sin esperas fijas; localizadores accesibles (`getByRole`, `getByLabel`). Criterio de terminado: `typecheck`, `lint`, `test` y `test:e2e` en verde.
 
@@ -506,7 +509,7 @@ Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las sk
 ### ADR-001: Backend = fork local de activity-bookings-express
 - **Contexto:** PRD §7 fija la API del curso. Hay que elegir entre ella y una API simulada (json-server, MSW).
 - **Decisión:** usar el fork en `http://localhost:3000`. No se crea API simulada para desarrollo; los tests usan interceptación (ADR-007).
-- **Consecuencias:** la persona debe arrancar el fork para usar la app. Contrato real desde el primer día. Las peculiaridades de la API (inglés, sin plazas disponibles, sin validación de estado) se absorben en `domain/`.
+- **Consecuencias:** la persona debe arrancar el fork para usar la app. Contrato real desde el primer día. Las peculiaridades de la API (inglés, sin plazas disponibles) se absorben en `domain/`. La validación de estado y fecha al reservar, que al principio faltaba, la añade el fork (ADR-013).
 
 ### ADR-002: SPA con React + Vite, sin framework de servidor
 - **Contexto:** app pequeña, sin SEO ni renderizado en servidor; AGENTS.md fija React + Vite.
@@ -540,7 +543,7 @@ Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las sk
 
 ### ADR-008: Traducción de mensajes de la API al español en el cliente
 - **Contexto:** F17 pide mostrar el mensaje de la API, pero sus mensajes están en inglés y D8 fija la interfaz en español.
-- **Decisión:** `domain/api-errors.ts` traduce: (a) por `kind`/código (401, 402, 404, 500, red, contrato) con textos fijos; (b) errores por campo según `field` (`username`, `email`, `password`, `terms`, `participants`) con el mensaje en español de la regla conocida; (c) `Email is already registered` → "Ya existe una cuenta con este email". Si llega un mensaje desconocido, se muestra el texto genérico del código seguido del original entre paréntesis, para no ocultar información.
+- **Decisión:** `domain/api-errors.ts` traduce: (a) por `kind`/código (401, 402, 404, 500, red, contrato) con textos fijos; (b) errores por campo según `field` (`username`, `email`, `password`, `terms`, `participants`) con el mensaje en español de la regla conocida; (c) `Email is already registered` → "Ya existe una cuenta con este email"; (d) `Activity is not bookable: <motivo>` → texto en español por motivo (ADR-013, spec `fix-api-bookable-launch` R10). Si llega un mensaje desconocido, se muestra el texto genérico del código seguido del original entre paréntesis, para no ocultar información.
 - **Consecuencias:** interfaz coherente en español; tabla de traducciones con test. Requiere validación (ver §13, decisión V1).
 
 ### ADR-009: Filtro de "Mis reservas" en el cliente
@@ -563,18 +566,23 @@ Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las sk
 - **Decisión:** búsqueda y orden se delegan en la API (debounce 300 ms, cancelación de la petición anterior); los `draft` se descartan al recibir la respuesta.
 - **Consecuencias:** coherente con el PRD (§7) y sin duplicar lógica. "Ordenar por nombre" ordena por cohete y luego misión (ver §13, V2).
 
+### ADR-013: La API rechaza reservas en lanzamientos no reservables (2026-11-07)
+- **Contexto:** el fork creaba la reserva (y cobraba) en cualquier lanzamiento existente, fuera cual fuera su estado o fecha (riesgo R1; `feat-booking-creation` plan P14). El cliente solo lo evitaba ocultando el formulario.
+- **Decisión:** se amplía el contrato de `POST /bookings` (§4.1): tras `Activity not found` y antes de plazas y cobro, 400 `{ message: "Activity is not bookable: <draft|cancelled|done|sold-out|past-date>", errors: [] }`, con la misma regla y prioridad que `getBookability`; fecha no interpretable = `past-date`. Se implementa en el fork (rama `fix/bookable-launch`) y la traducción de los cinco mensajes en el cliente (rama `fix/bookable-launch-messages`, en `domain/api-errors.ts`, sin `kind` nuevo). Aprobado por la persona; el PRD D2 ("no se modifica el código de la API") se refiere a no exponer las plazas disponibles.
+- **Consecuencias:** la regla de reservabilidad queda duplicada en cliente y API (deben cambiar juntas); el riesgo R1 queda mitigado en el servidor; el smoke contra la API real comprueba el rechazo (§9).
+
 ## 11. Riesgos
 
 | # | Riesgo | Impacto | Mitigación |
 |---|---|---|---|
-| R1 | La API permite reservar en `draft`, `cancelled`, `done`, `sold-out` y fechas pasadas | Reservas incoherentes | `getBookability` en el cliente oculta el formulario; tests unitarios y e2e por estado. Riesgo residual: llamadas directas a la API (fuera del producto) |
+| R1 | (Mitigado, ADR-013) La API permitía reservar en `draft`, `cancelled`, `done`, `sold-out` y fechas pasadas | Reservas incoherentes | `getBookability` en el cliente oculta el formulario; tests unitarios y e2e por estado. Desde `fix-api-bookable-launch` la API también lo rechaza con 400 `Activity is not bookable: <motivo>` y el cliente muestra el motivo en español. Riesgo residual: regla duplicada en cliente y API (deben mantenerse alineadas) |
 | R2 | Plazas disponibles desconocidas antes de reservar (D2) | F10 depende del rechazo de la API | `max` del campo = `totalSeats`; tras el 400 se usa X del mensaje; si el texto cambia, `parseAvailableSeats` devuelve `null` y se muestra un mensaje genérico (test del caso) |
 | R3 | Importes múltiplos de 1000 → 402 siempre | Lanzamientos con precios "redondos" (p. ej. 250 000 €) **no se pueden reservar nunca** | Semilla con precios sin factor común con 1000 (§8); mensaje claro de F12; documentado en la spec `chore`. No se avisa antes de enviar (sería lógica de la pasarela simulada en el cliente) |
 | R4 | `db/activities.json` persistido sobrescribe la semilla por id | Se seguirían viendo las actividades antiguas | La spec `chore` vacía `db/activities.json`, `db/bookings.json` y `db/payments.json` (§8) |
 | R5 | `GET /bookings` devuelve 500 si una reserva apunta a una actividad borrada | "Mis reservas" no carga | Mensaje de error con "Reintentar"; mantener los datos del fork coherentes (R4). Fuera de control del cliente |
 | R6 | El importe se calcula con el precio **actual** de la actividad, no el cobrado (el pago guarda `amount` pero no se expone) | Importe mostrado distinto del cobrado si el proveedor cambia el precio | Aceptado (PRD §7); se documenta en la spec de Mis reservas |
 | R7 | Mensajes de la API en inglés | Incoherencia con D8 | Traducción en `domain/api-errors.ts` con fallback (ADR-008) |
-| R8 | Fixtures de e2e desalineados con la API real | Tests en verde con la app rota | Fixtures copiados de respuestas reales; validación Zod también en e2e; smoke opcional contra la API |
+| R8 | Fixtures de e2e desalineados con la API real | Tests en verde con la app rota | Fixtures copiados de respuestas reales; validación Zod también en e2e; smoke opcional contra la API (`chore-smoke-e2e`; caduca el 2027-06-01 con la fecha de `activity-2`) |
 | R9 | Token en `localStorage` (XSS) | Robo de sesión | Aceptado en formación; sin `dangerouslySetInnerHTML`; React escapa contenidos |
 | R10 | Reloj del navegador desajustado | Caducidad o reservabilidad por fecha mal calculadas | El 401 de la API es la fuente final para la sesión; para la fecha, el riesgo se acepta |
 | R11 | La API acepta `participants` decimales | Reservas con 1,5 plazas | El cliente solo envía enteros ≥ 1 (validación del formulario y del recurso) |
@@ -595,7 +603,7 @@ Convenciones: nombres de test con el requisito de la spec (`R<n>`) según las sk
 | F8 | Detalle de lanzamiento | `LaunchDetailPage`, `use-launch`, `api/activities.getActivity`, `NotFound`/404 → `ErrorMessage` |
 | F9 | Reservar N plazas e importe | `BookingForm`, `domain/booking.totalAmount`, `domain/format.formatPrice`, `LaunchDetailPage` (enlaces a login/registro sin sesión) |
 | F10 | No superar plazas | `BookingForm` (`max`), `domain/api-errors.parseAvailableSeats`, `api/errors` (`kind: 'capacity'`) |
-| F11 | Solo `published`/`confirmed` y futuro | `domain/launch.getBookability`, `BookabilityNotice`, `LaunchCard` |
+| F11 | Solo `published`/`confirmed` y futuro | `domain/launch.getBookability`, `BookabilityNotice`, `LaunchCard`; en la API, `POST /bookings` → 400 `Activity is not bookable` traducido en `domain/api-errors` (ADR-013) |
 | F12 | Pago rechazado | `api/errors` (`kind: 'payment'`), `BookingForm`, `domain/api-errors` |
 | F13 | Confirmación | `use-create-booking` → `BookingDetailPage` (`state.justCreated`), `api/bookings.createBooking` + `getBooking` |
 | F14 | Mis reservas | `MyBookingsPage`, `use-my-bookings`, `api/bookings.getMyBookings`, `domain/booking.toBooking`, `EmptyState` |
