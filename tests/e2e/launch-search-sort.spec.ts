@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { API_URL, apiLikeHandler, mockActivities } from './fixtures/api-mock.ts';
+import {
+  API_URL,
+  apiLikeHandler,
+  mockActivities,
+  trackFinishedRequests,
+} from './fixtures/api-mock.ts';
 import { findLaunchDto, launchDtos } from './fixtures/data.ts';
 import { launchCard } from './fixtures/locators.ts';
 
@@ -48,16 +53,8 @@ function cardTitles(page: Page) {
   return page.getByRole('article').getByRole('heading', { level: 2 });
 }
 
-// Completed GET requests to the list endpoint (StrictMode aborts the first one in dev).
 function trackFinishedListRequests(page: Page): string[] {
-  const finished: string[] = [];
-  page.on('requestfinished', (request) => {
-    const url = new URL(request.url());
-    if (request.method() === 'GET' && `${url.origin}${url.pathname}` === LIST_URL) {
-      finished.push(request.url());
-    }
-  });
-  return finished;
+  return trackFinishedRequests(page, 'GET', LIST_URL);
 }
 
 function lastListSearch(requestedUrls: URL[]): string | undefined {

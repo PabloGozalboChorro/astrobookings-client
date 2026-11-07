@@ -10,6 +10,19 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// Completed requests with the method to the URL, ignoring the query string (StrictMode aborts
+// the first one in dev, so intercepted requests can be one more than the completed ones).
+export function trackFinishedRequests(page: Page, method: string, url: string): string[] {
+  const finished: string[] = [];
+  page.on('requestfinished', (request) => {
+    const requestUrl = new URL(request.url());
+    if (request.method() === method && `${requestUrl.origin}${requestUrl.pathname}` === url) {
+      finished.push(request.url());
+    }
+  });
+  return finished;
+}
+
 export type MockApiResponse = { status?: number; body: unknown } | 'abort';
 
 export type ActivitiesHandler = (

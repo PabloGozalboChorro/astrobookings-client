@@ -294,6 +294,13 @@ export const bookingDtos: readonly BookingDtoFixture[] = [
   bookingWithActivity('booking-4', 'activity-6', 1, '2026-11-01T08:00:00.000Z', 'refunded'),
 ];
 
+// Three bookings of the filter acceptance criteria: two of activity-1 and one of activity-3.
+export const filterBookingDtos: readonly BookingDtoFixture[] = [
+  bookingWithActivity('booking-1', 'activity-1', 2, '2026-11-03T09:00:00.000Z', 'paid'),
+  bookingWithActivity('booking-5', 'activity-1', 1, '2026-11-05T12:00:00.000Z', 'paid'),
+  bookingWithActivity('booking-2', 'activity-3', 3, '2026-11-04T18:00:00.000Z', 'paid'),
+];
+
 export function findBookingDto(id: string): BookingDtoFixture {
   const booking = bookingDtos.find((dto) => dto.id === id);
   if (booking === undefined) {

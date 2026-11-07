@@ -257,3 +257,325 @@ describe('MyBookingsPage', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+const FILTER_NAME = 'Filtrar por lanzamiento';
+
+function filterBookingList(): BookingDtoFixture[] {
+  return [
+    bookingDto(),
+    bookingDto({ id: 'booking-5', participants: 1, createdAt: '2026-11-05T12:00:00.000Z' }),
+    suborbitalBookingDto(),
+  ];
+}
+
+function launchSelect(): HTMLElement {
+  return screen.getByRole('combobox', { name: FILTER_NAME });
+}
+
+function launchOptionTexts(): string[] {
+  return within(launchSelect())
+    .getAllByRole('option')
+    .map((option) => option.textContent ?? '');
+}
+
+function articleLinks(): (string | null)[] {
+  return bookingArticles().map(
+    (article) => within(article).getByRole('link').getAttribute('href'),
+  );
+}
+
+describe('MyBookingsPage launch filter', () => {
+  it('R1: shows the filter with the launches of the bookings', async () => {
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp('/reservas');
+
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(launchOptionTexts()).toEqual([
+      'Todos los lanzamientos',
+      'Falcon 9 · Misión Luna',
+      'New Shepard · Vuelo Suborbital',
+    ]);
+    expect(launchSelect()).toHaveValue('');
+    expect(bookingArticles()).toHaveLength(3);
+  });
+
+  it('R1: shows the filter with a single booking', async () => {
+    storeSession();
+    mockBookingList([bookingDto({ activityId: 'activity-8' })]);
+
+    renderApp('/reservas');
+
+    await screen.findByRole('article', { name: 'Paseo Lunar Express' });
+    expect(launchOptionTexts()).toEqual(['Todos los lanzamientos', 'Paseo Lunar Express']);
+  });
+
+  it('R2: filters by launch without a new request', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    const fetchSpy = mockBookingList(filterBookingList());
+
+    renderApp('/reservas');
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+
+    await user.selectOptions(launchSelect(), 'Falcon 9 · Misión Luna');
+
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-1');
+    expect(launchSelect()).toHaveValue('activity-1');
+    expect(screen.getAllByRole('article', { name: 'Misión Luna' })).toHaveLength(2);
+    expect(screen.queryByRole('article', { name: 'Vuelo Suborbital' })).toBeNull();
+    expect(articleLinks()).toEqual(['/reservas/booking-5', '/reservas/booking-1']);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('R3: shows all bookings again and removes the parameter', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    const fetchSpy = mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-1');
+    await screen.findAllByRole('article', { name: 'Misión Luna' });
+    expect(bookingArticles()).toHaveLength(2);
+
+    await user.selectOptions(launchSelect(), 'Todos los lanzamientos');
+
+    expect(currentLocation()).toBe('/reservas');
+    expect(launchSelect()).toHaveValue('');
+    expect(bookingArticles()).toHaveLength(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('R4: applies the filter from the URL', async () => {
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-3');
+
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(launchSelect()).toHaveValue('activity-3');
+    expect(
+      screen.getByRole('option', { name: 'New Shepard · Vuelo Suborbital' }),
+    ).toHaveProperty('selected', true);
+    expect(bookingArticles()).toHaveLength(1);
+  });
+
+  it('R5: ignores an unknown launch in the URL', async () => {
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-99');
+
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(launchSelect()).toHaveValue('');
+    expect(bookingArticles()).toHaveLength(3);
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-99');
+  });
+
+  it('R6: hides the filter without bookings', async () => {
+    storeSession();
+    mockBookingList([]);
+
+    renderApp('/reservas');
+
+    expect(await screen.findByText('Todavía no tienes reservas.')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+  });
+
+  it('hides the filter while loading and on error, and keeps the URL filter after retry', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    const firstResponse = deferred<Response>();
+    let attempt = 0;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+      attempt += 1;
+      return attempt === 1
+        ? firstResponse.promise
+        : Promise.resolve(jsonResponse(200, filterBookingList()));
+    });
+
+    renderApp('/reservas?lanzamiento=activity-1');
+
+    expect(screen.getByText(LOADING_TEXT)).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+
+    firstResponse.resolve(
+      jsonResponse(500, { message: 'Failed to retrieve bookings', errors: [] }),
+    );
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(SERVER_TEXT);
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+
+    await user.click(within(alert).getByRole('button', { name: 'Reintentar' }));
+
+    await screen.findAllByRole('article', { name: 'Misión Luna' });
+    expect(launchSelect()).toHaveValue('activity-1');
+    expect(bookingArticles()).toHaveLength(2);
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-1');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not send activityId', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    const fetchSpy = mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-3');
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    await user.selectOptions(launchSelect(), 'Falcon 9 · Misión Luna');
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [input] = fetchSpy.mock.calls[0] ?? [];
+    const url = new URL(String(input));
+    expect(url.href).toBe('http://localhost:3999/bookings');
+    expect(url.searchParams.has('activityId')).toBe(false);
+  });
+});
+
+describe('MyBookingsPage launch filter edge cases (tester)', () => {
+  it.each([
+    ['/reservas?lanzamiento=', 3, ''],
+    ['/reservas?lanzamiento=ACTIVITY-1', 3, ''],
+    ['/reservas?lanzamiento=activity-3&lanzamiento=activity-1', 1, 'activity-3'],
+  ])('R4/R5: opening %s shows %i bookings', async (path, count, value) => {
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp(path);
+
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(launchSelect()).toHaveValue(value);
+    expect(bookingArticles()).toHaveLength(count);
+    expect(currentLocation()).toBe(path);
+  });
+
+  it('R2: replaces a repeated parameter with the chosen launch', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-99&lanzamiento=activity-3');
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(bookingArticles()).toHaveLength(3);
+
+    await user.selectOptions(launchSelect(), 'Falcon 9 · Misión Luna');
+
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-1');
+    expect(bookingArticles()).toHaveLength(2);
+  });
+
+  it('R1/R2: launches with the same name and different ids are separate options', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    mockBookingList([
+      bookingDto({
+        id: 'booking-1',
+        activityId: 'activity-2',
+        activity: { name: 'Falcon 9 · Misión Luna' },
+      }),
+      bookingDto({ id: 'booking-5', createdAt: '2026-11-05T12:00:00.000Z' }),
+    ]);
+
+    renderApp('/reservas');
+    await screen.findAllByRole('article', { name: 'Misión Luna' });
+
+    const options = within(launchSelect()).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([
+      'Todos los lanzamientos',
+      'Falcon 9 · Misión Luna',
+      'Falcon 9 · Misión Luna',
+    ]);
+    expect(options.map((option) => option.getAttribute('value'))).toEqual([
+      '',
+      'activity-1',
+      'activity-2',
+    ]);
+
+    await user.selectOptions(launchSelect(), 'activity-2');
+
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-2');
+    expect(articleLinks()).toEqual(['/reservas/booking-1']);
+  });
+
+  it('R1: the select is labelled "Filtrar por lanzamiento"', async () => {
+    storeSession();
+    mockBookingList(filterBookingList());
+
+    renderApp('/reservas');
+
+    const select = await screen.findByLabelText(FILTER_NAME);
+    expect(select.tagName).toBe('SELECT');
+    const label = screen.getByText(FILTER_NAME);
+    expect(label.tagName).toBe('LABEL');
+    expect(label).toHaveAttribute('for', select.id);
+  });
+
+  it('P5: the header "Mis reservas" link clears the filter without a new request', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    const fetchSpy = mockBookingList(filterBookingList());
+
+    renderApp('/reservas?lanzamiento=activity-3');
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(bookingArticles()).toHaveLength(1);
+
+    await user.click(
+      within(screen.getByRole('banner')).getByRole('link', { name: 'Mis reservas' }),
+    );
+
+    expect(currentLocation()).toBe('/reservas');
+    expect(launchSelect()).toHaveValue('');
+    expect(bookingArticles()).toHaveLength(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('R4: keeps the filter when filtering after a network error and retry', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    let attempt = 0;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() => {
+      attempt += 1;
+      return attempt === 1
+        ? Promise.reject(new TypeError('Failed to fetch'))
+        : Promise.resolve(jsonResponse(200, filterBookingList()));
+    });
+
+    renderApp('/reservas?lanzamiento=activity-3');
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(NETWORK_TEXT);
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+    await user.click(within(alert).getByRole('button', { name: 'Reintentar' }));
+
+    await screen.findByRole('article', { name: 'Vuelo Suborbital' });
+    expect(bookingArticles()).toHaveLength(1);
+
+    await user.selectOptions(launchSelect(), 'Falcon 9 · Misión Luna');
+
+    expect(currentLocation()).toBe('/reservas?lanzamiento=activity-1');
+    expect(bookingArticles()).toHaveLength(2);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('hides the filter on an invalid (contract) response', async () => {
+    storeSession();
+    mockFetchByUrl(() => jsonResponse(200, [{ id: 'booking-1' }]));
+
+    renderApp('/reservas?lanzamiento=activity-1');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(CONTRACT_TEXT);
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+  });
+
+  it('R6: hides the filter without bookings even with lanzamiento in the URL', async () => {
+    storeSession();
+    mockBookingList([]);
+
+    renderApp('/reservas?lanzamiento=activity-1');
+
+    expect(await screen.findByText('Todavía no tienes reservas.')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: FILTER_NAME })).toBeNull();
+    expect(screen.queryByRole('article')).toBeNull();
+  });
+});
