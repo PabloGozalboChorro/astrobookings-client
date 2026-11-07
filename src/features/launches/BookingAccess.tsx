@@ -1,9 +1,9 @@
-import { Link, useLocation } from 'react-router';
+import { Link } from 'react-router';
 import { loginPath, registerPath } from '../../domain/session';
+import { useCurrentPath } from '../../hooks/use-current-path';
 
 export function BookingAccess() {
-  const location = useLocation();
-  const currentPath = `${location.pathname}${location.search}`;
+  const currentPath = useCurrentPath();
 
   return (
     <div className="booking-access">
