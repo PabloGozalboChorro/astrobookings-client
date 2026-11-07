@@ -130,6 +130,19 @@ describe('bookingErrorFeedback', () => {
     expect(bookingErrorFeedback(error)).toEqual({ alert: expected });
   });
 
+  it.each<[string, string]>([
+    ['draft', 'Este lanzamiento no está disponible para reservar.'],
+    ['cancelled', 'Este lanzamiento se ha cancelado y no se puede reservar.'],
+    ['done', 'Este lanzamiento ya se ha realizado y no se puede reservar.'],
+    ['sold-out', 'Este lanzamiento está agotado: no quedan plazas.'],
+    ['past-date', 'La fecha de este lanzamiento ya ha pasado y no se puede reservar.'],
+    ['archived', 'No se ha podido completar la operación (Activity is not bookable: archived)'],
+  ])('R10 (bookable launch): returns only an alert for the "%s" reason', (reason, expected) => {
+    expect(bookingErrorFeedback(apiError(400, `Activity is not bookable: ${reason}`))).toEqual({
+      alert: expected,
+    });
+  });
+
   it('R12: returns no text for a 401 (the session flow handles it)', () => {
     expect(
       bookingErrorFeedback(apiError(401, 'Invalid or expired token. Please login again.')),

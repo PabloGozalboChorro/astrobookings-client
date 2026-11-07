@@ -402,6 +402,51 @@ describe('BookingForm', () => {
     expect(currentLocation()).toBe('/lanzamientos/activity-1');
   });
 
+  it.each<[string, string]>([
+    ['draft', 'Este lanzamiento no está disponible para reservar.'],
+    ['cancelled', 'Este lanzamiento se ha cancelado y no se puede reservar.'],
+    ['done', 'Este lanzamiento ya se ha realizado y no se puede reservar.'],
+    ['sold-out', 'Este lanzamiento está agotado: no quedan plazas.'],
+    ['past-date', 'La fecha de este lanzamiento ya ha pasado y no se puede reservar.'],
+  ])(
+    'R10 (bookable launch): shows the "%s" reason, keeps the value and enables "Reservar"',
+    async (reason, expected) => {
+      const user = userEvent.setup();
+      storeSession();
+      const fetchSpy = mockApi(() => apiError(400, `Activity is not bookable: ${reason}`));
+      const input = await openForm();
+
+      await typeSeats(user, input, '2');
+      await user.click(reserveButton());
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(expected);
+      expect(alert).not.toHaveTextContent('Activity is not bookable');
+      expect(reserveButton()).toBeEnabled();
+      expect(reserveButton()).toHaveTextContent('Reservar');
+      expect(input).toHaveValue(2);
+      expect(input).toHaveAttribute('max', '6');
+      expect(postRequests(fetchSpy)).toHaveLength(1);
+      expect(currentLocation()).toBe('/lanzamientos/activity-1');
+    },
+  );
+
+  it('R10 (bookable launch): shows the generic text for an unknown reason', async () => {
+    const user = userEvent.setup();
+    storeSession();
+    mockApi(() => apiError(400, 'Activity is not bookable: archived'));
+    const input = await openForm();
+
+    await typeSeats(user, input, '2');
+    await user.click(reserveButton());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se ha podido completar la operación (Activity is not bookable: archived)',
+    );
+    expect(reserveButton()).toBeEnabled();
+    expect(input).toHaveValue(2);
+  });
+
   it('R12: shows the validation error of the API next to the field', async () => {
     const user = userEvent.setup();
     storeSession();

@@ -460,3 +460,23 @@ test.describe('booking creation', () => {
     expect(posts(bookings)).toHaveLength(0);
   });
 });
+
+test.describe('bookable launch rejected by the API', () => {
+  test('R10 (bookable launch): shows why the launch cannot be booked', async ({ page }) => {
+    await mockBookingApi(page, () => ({
+      status: 400,
+      body: errorResponses.activityNotBookableCancelled,
+    }));
+    await openSignedIn(page);
+
+    await typeSeats(page, '1');
+    await reserveButton(page).click();
+
+    await expect(formAlert(page)).toHaveText(
+      'Este lanzamiento se ha cancelado y no se puede reservar.',
+    );
+    await expect(formAlert(page)).not.toContainText('Activity is not bookable');
+    await expect(reserveButton(page)).toBeEnabled();
+    await expect(page).toHaveURL(/\/lanzamientos\/activity-1$/);
+  });
+});

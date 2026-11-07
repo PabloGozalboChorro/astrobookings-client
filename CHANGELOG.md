@@ -6,6 +6,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Fixed
+
+- API (fork `activity-bookings-express`): las reservas en lanzamientos en borrador, cancelados, realizados, agotados o con fecha pasada se rechazan con un 400 sin cobrar ni crear la reserva; el formulario de reserva muestra el motivo en español.
+
 ## [0.2.0] - 2026-11-07
 
 ### Added

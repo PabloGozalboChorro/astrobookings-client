@@ -199,6 +199,7 @@ export const errorResponses = {
     ],
   },
   failedToCreateBooking: { message: 'Failed to create booking', errors: [] },
+  activityNotBookableCancelled: { message: 'Activity is not bookable: cancelled', errors: [] },
 } satisfies Record<string, ErrorResponseFixture>;
 
 export function capacityExceeded(available: number, requested: number): ErrorResponseFixture {
